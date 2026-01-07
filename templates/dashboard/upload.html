@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
+        <!-- Top Header -->
+        <div class="bg-white border-bottom p-4">
+            <h4 class="mb-1 fw-bold">Upload Cattle Image</h4>
+            <p class="text-muted mb-0">Upload a clear image of your cattle for FMD detection</p>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="container-fluid p-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-5">
+                            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                                {% csrf_token %}
+                                
+                                <!-- Drag & Drop Area -->
+                                <div class="upload-area border-2 border-dashed rounded-4 p-5 text-center mb-4" style="border-color: #ddd; background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(76, 175, 80, 0.05));">
+                                    <div id="uploadBox">
+                                        <div class="upload-icon mb-3" style="width: 100px; height: 100px; margin: 0 auto; background: linear-gradient(135deg, #2196F3, #4CAF50); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="mb-3">Drag & Drop Your Image Here</h5>
+                                        <p class="text-muted mb-3">or</p>
+                                        <label for="id_image" class="btn btn-primary px-5 rounded-pill" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%); border: none;">
+                                            <i class="fas fa-folder-open me-2"></i>
+                                            Browse Files
+                                        </label>
+                                        <input type="file" id="id_image" name="image" class="d-none" accept="image/jpeg,image/png,image/jpg,image/webp" required>
+                                        <p class="text-muted small mt-3 mb-0">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                                    </div>
+                                    
+                                    <!-- Image Preview -->
+                                    <div id="imagePreview" class="d-none">
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded-3 mb-3" style="max-height: 400px;">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeImage()">
+                                            <i class="fas fa-times me-2"></i>Remove Image
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Information (Optional) -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.animal_id.id_for_label }}" class="form-label">Animal ID (Optional)</label>
+                                        {{ form.animal_id }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.location.id_for_label }}" class="form-label">Location (Optional)</label>
+                                        {{ form.location }}
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes (Optional)</label>
+                                    {{ form.notes }}
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold" id="submitBtn" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%); border: none;">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Upload and Analyze
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const imageInput = document.getElementById('id_image');
+    const uploadBox = document.getElementById('uploadBox');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Handle file selection
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            displayImage(file);
+        }
+    });
+
+    // Handle drag and drop
+    const uploadArea = document.querySelector('.upload-area');
+    
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#2196F3';
+        uploadArea.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.backgroundColor = '';
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.backgroundColor = '';
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            imageInput.files = e.dataTransfer.files;
+            displayImage(file);
+        }
+    });
+
+    function displayImage(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            uploadBox.classList.add('d-none');
+            imagePreview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        imageInput.value = '';
+        uploadBox.classList.remove('d-none');
+        imagePreview.classList.add('d-none');
+        previewImg.src = '';
+    }
+
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
+        <!-- Top Header -->
+        <div class="bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1 fw-bold">Detection Details</h4>
+                    <p class="text-muted mb-0">ID: {{ detection.id }}</p>
+                </div>
+                <a href="{% url 'history' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to History
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="container-fluid p-4">
+            <div class="row g-4">
+                <!-- Image Preview -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0 fw-bold">Uploaded Image</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <img src="{{ detection.image.url }}" alt="Cattle Image" class="img-fluid rounded-3 w-100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detection Information -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0 fw-bold">Analysis Results</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Status -->
+                            <div class="mb-4">
+                                <label class="text-muted small mb-2">Status</label>
+                                <div>
+                                    <span class="badge fs-6 
+                                        {% if detection.status == 'completed' %}bg-success
+                                        {% elif detection.status == 'analyzing' %}bg-info
+                                        {% elif detection.status == 'failed' %}bg-danger
+                                        {% else %}bg-secondary{% endif %} px-4 py-2">
+                                        {{ detection.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Result -->
+                            <div class="mb-4">
+                                <label class="text-muted small mb-2">Result</label>
+                                <div>
+                                    {% if detection.result %}
+                                        <span class="badge fs-6
+                                            {% if detection.result == 'healthy' %}bg-success
+                                            {% elif detection.result == 'fmd' %}bg-danger
+                                            {% elif detection.result == 'not_cow' %}bg-warning
+                                            {% else %}bg-secondary{% endif %} px-4 py-2">
+                                            {{ detection.get_result_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Pending analysis</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Confidence Score -->
+                            <div class="mb-4">
+                                <label class="text-muted small mb-2">Confidence Score</label>
+                                <div>
+                                    {% if detection.confidence_score %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-3" style="height: 25px;">
+                                                <div class="progress-bar 
+                                                    {% if detection.confidence_score >= 80 %}bg-success
+                                                    {% elif detection.confidence_score >= 60 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    role="progressbar" 
+                                                    style="width: {{ detection.confidence_score }}%">
+                                                    {{ detection.confidence_score|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Metadata -->
+                            <div class="mb-3">
+                                <label class="text-muted small">Animal ID</label>
+                                <p class="mb-0 fw-semibold">{{ detection.animal_id|default:"Not specified" }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small">Location</label>
+                                <p class="mb-0 fw-semibold">{{ detection.location|default:"Not specified" }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small">Uploaded At</label>
+                                <p class="mb-0 fw-semibold">{{ detection.uploaded_at|date:"F d, Y H:i:s" }}</p>
+                            </div>
+
+                            {% if detection.analyzed_at %}
+                                <div class="mb-3">
+                                    <label class="text-muted small">Analyzed At</label>
+                                    <p class="mb-0 fw-semibold">{{ detection.analyzed_at|date:"F d, Y H:i:s" }}</p>
+                                </div>
+                            {% endif %}
+
+                            {% if detection.notes %}
+                                <div class="mb-3">
+                                    <label class="text-muted small">Notes</label>
+                                    <p class="mb-0">{{ detection.notes }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                {% if detection.result == 'fmd' %}
+                    <div class="col-12">
+                        <div class="alert alert-danger border-0 shadow-sm">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                FMD Detected - Immediate Action Required
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                <li>Immediately isolate the affected animal from the herd</li>
+                                <li>Contact your veterinary officer for professional examination</li>
+                                <li>Restrict animal movement and visitors to the farm</li>
+                                <li>Implement biosecurity measures on the farm</li>
+                                <li>Monitor other animals for similar symptoms</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% elif detection.result == 'healthy' %}
+                    <div class="col-12">
+                        <div class="alert alert-success border-0 shadow-sm">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Animal appears healthy
+                            </h5>
+                            <p class="mb-0">No signs of FMD detected. Continue regular monitoring and maintain good farm hygiene practices.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

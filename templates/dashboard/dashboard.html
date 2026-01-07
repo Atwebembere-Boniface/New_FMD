@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
+        <!-- Top Header -->
+        <div class="bg-white border-bottom p-4">
+            <h4 class="mb-1 fw-bold">Welcome Back!</h4>
+            <p class="text-muted mb-0">Early Detection System for Foot and Mouth Disease</p>
+            <small class="text-muted">Simba Farms, Ibanda District</small>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="container-fluid p-4">
+            <div class="row g-4">
+                <!-- Total Scans Card -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body p-4 text-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">Total Scans</h6>
+                                    <h2 class="fw-bold mb-0">{{ total_scans }}</h2>
+                                </div>
+                                <div class="bg-white bg-opacity-25 p-3 rounded-3">
+                                    <i class="fas fa-upload fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                <small>Monitor</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FMD Detected Card -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="card-body p-4 text-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">FMD Detected</h6>
+                                    <h2 class="fw-bold mb-0">{{ fmd_detected }}</h2>
+                                </div>
+                                <div class="bg-white bg-opacity-25 p-3 rounded-3">
+                                    <i class="fas fa-heartbeat fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <i class="fas fa-chart-line me-1"></i>
+                                <small>Monitor</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Healthy Cattle Card -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="card-body p-4 text-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">Healthy Cattle</h6>
+                                    <h2 class="fw-bold mb-0">{{ healthy_cattle }}</h2>
+                                </div>
+                                <div class="bg-white bg-opacity-25 p-3 rounded-3">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                <small>Excellent</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Cattle Image Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%);">
+                        <div class="card-body p-5 text-center text-white">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                            <h4 class="fw-bold mb-2">Analyze Cattle Image</h4>
+                            <p class="mb-4">Upload image for FMD detection</p>
+                            <a href="{% url 'upload_image' %}" class="btn btn-light btn-lg px-5 rounded-pill">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Image
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Detections -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fw-bold">Recent Detections</h5>
+                                <a href="{% url 'history' %}" class="text-primary text-decoration-none">View All</a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if recent_detections %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="px-4 py-3">Date</th>
+                                                <th>Animal ID</th>
+                                                <th>Status</th>
+                                                <th>Result</th>
+                                                <th>Confidence</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for detection in recent_detections %}
+                                                <tr>
+                                                    <td class="px-4 py-3">{{ detection.uploaded_at|date:"M d, Y H:i" }}</td>
+                                                    <td>{{ detection.animal_id|default:"N/A" }}</td>
+                                                    <td>
+                                                        <span class="badge 
+                                                            {% if detection.status == 'completed' %}bg-success
+                                                            {% elif detection.status == 'analyzing' %}bg-info
+                                                            {% elif detection.status == 'failed' %}bg-danger
+                                                            {% else %}bg-secondary{% endif %}">
+                                                            {{ detection.get_status_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if detection.result %}
+                                                            <span class="badge 
+                                                                {% if detection.result == 'healthy' %}bg-success
+                                                                {% elif detection.result == 'fmd' %}bg-danger
+                                                                {% else %}bg-warning{% endif %}">
+                                                                {{ detection.get_result_display }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if detection.confidence_score %}
+                                                            {{ detection.confidence_score|floatformat:1 }}%
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'detection_detail' detection.id %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No detections yet. Upload your first cattle image!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

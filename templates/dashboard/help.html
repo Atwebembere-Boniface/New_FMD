@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
+        <!-- Top Header -->
+        <div class="bg-white border-bottom p-4">
+            <h4 class="mb-1 fw-bold">Help & Support</h4>
+            <p class="text-muted mb-0">Learn how to use the FMD Detection System</p>
+        </div>
+
+        <!-- Content -->
+        <div class="container-fluid p-4">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <!-- Getting Started -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>Getting Started</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold mb-3">How to use the system:</h6>
+                            <ol class="mb-0">
+                                <li class="mb-2">Navigate to the "Upload Image" page</li>
+                                <li class="mb-2">Take a clear photo of your cattle or select from gallery</li>
+                                <li class="mb-2">Optionally add Animal ID, location, and notes</li>
+                                <li class="mb-2">Click "Upload and Analyze"</li>
+                                <li class="mb-2">View results and recommendations</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Best Practices -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-success text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Best Practices</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold mb-3">For accurate detection:</h6>
+                            <ul class="mb-0">
+                                <li class="mb-2">Use good lighting conditions</li>
+                                <li class="mb-2">Capture clear, focused images</li>
+                                <li class="mb-2">Include visible symptoms (mouth, hooves)</li>
+                                <li class="mb-2">Avoid blurry or dark images</li>
+                                <li class="mb-2">Take multiple angles if needed</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- FMD Symptoms -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>FMD Symptoms to Look For</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul class="mb-0">
+                                <li class="mb-2">Fever and loss of appetite</li>
+                                <li class="mb-2">Blisters or lesions in the mouth</li>
+                                <li class="mb-2">Lesions on hooves and feet</li>
+                                <li class="mb-2">Excessive drooling</li>
+                                <li class="mb-2">Lameness</li>
+                                <li class="mb-2">Reduced milk production</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- FAQ -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-info text-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Frequently Asked Questions</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="accordion" id="faqAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                            How accurate is the detection system?
+                                        </button>
+                                    </h2>
+                                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            The system uses advanced deep learning models trained on extensive cattle disease datasets. While highly accurate, always consult a veterinary officer for final diagnosis.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                            What should I do if FMD is detected?
+                                        </button>
+                                    </h2>
+                                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Immediately isolate the animal, contact your veterinary officer, restrict farm access, and monitor other animals closely.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                            Can I use this for other cattle diseases?
+                                        </button>
+                                    </h2>
+                                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Currently, the system is trained specifically for Foot-and-Mouth Disease detection. Future updates may include additional diseases.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Support -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-warning py-3">
+                            <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Need More Help?</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="mb-3">For technical support or questions, contact:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="fas fa-envelope text-primary me-2"></i> support@simbafarmsdetection.com</li>
+                                <li class="mb-2"><i class="fas fa-phone text-primary me-2"></i> +256 XXX XXX XXX</li>
+                                <li><i class="fas fa-map-marker-alt text-primary me-2"></i> Simba Farms, Ibanda District</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
