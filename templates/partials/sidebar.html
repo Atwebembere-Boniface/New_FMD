@@ -1,8 +1,8 @@
 <div class="sidebar bg-primary text-white vh-100 position-fixed" style="width: 250px; left: 0; top: 0;">
     <!-- Logo Section -->
     <div class="p-4 text-center border-bottom border-light">
-        <i class="fas fa-cow fa-3x mb-2"></i>
-        <h5 class="mb-0 fw-bold">FMD Detection</h5>
+        <i class="fas fa-cow fa-3x mb-2" style="color: #FB923C;"></i>
+        <h5 class="mb-0 fw-bold" style="color: white !important;">FMD Detection</h5>
         <small class="text-light">Simba Farms</small>
     </div>
 
@@ -20,6 +20,10 @@
             <i class="fas fa-history me-3"></i>
             History
         </a>
+        <a href="{% url 'reports' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+            <i class="fas fa-file-alt me-3"></i>
+            Reports
+        </a>
         <a href="{% url 'help' %}" class="sidebar-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
             <i class="fas fa-question-circle me-3"></i>
             Help
@@ -28,7 +32,7 @@
 
     <!-- Logout Button -->
     <div class="position-absolute bottom-0 w-100 p-4">
-        <a href="{% url 'logout' %}" class="btn btn-light w-100">
+        <a href="{% url 'logout' %}" class="btn w-100" style="background-color: #FB923C; color: white; border: none;">
             <i class="fas fa-sign-out-alt me-2"></i>
             Logout
         </a>
@@ -37,7 +41,7 @@
 
 <style>
     .sidebar {
-        background: linear-gradient(180deg, #2196F3 0%, #1976D2 100%) !important;
+        background: linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%) !important;
     }
     
     .sidebar-link {
@@ -50,14 +54,14 @@
     }
     
     .sidebar-link:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(251, 146, 60, 0.2);
         color: white;
-        border-left-color: white;
+        border-left-color: #FB923C;
     }
     
     .sidebar-link.active {
-        background-color: rgba(255, 255, 255, 0.2);
-        border-left-color: white;
+        background-color: rgba(251, 146, 60, 0.3);
+        border-left-color: #FB923C;
         font-weight: 600;
     }
 </style>

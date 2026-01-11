@@ -9,7 +9,7 @@
     <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
         <!-- Top Header -->
         <div class="bg-white border-bottom p-4">
-            <h4 class="mb-1 fw-bold">Welcome Back!</h4>
+            <h4 class="mb-1 fw-bold" style="color: #FB923C !important;">Welcome Back!</h4>
             <p class="text-muted mb-0">Early Detection System for Foot and Mouth Disease</p>
             <small class="text-muted">Simba Farms, Ibanda District</small>
         </div>
@@ -19,15 +19,15 @@
             <div class="row g-4">
                 <!-- Total Scans Card -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%);">
                         <div class="card-body p-4 text-white">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="text-white-50 mb-2">Total Scans</h6>
-                                    <h2 class="fw-bold mb-0">{{ total_scans }}</h2>
+                                    <h6 class="text-white-50 mb-2" style="color: rgba(255,255,255,0.7) !important;">Total Scans</h6>
+                                    <h2 class="fw-bold mb-0" style="color: white !important;">{{ total_scans }}</h2>
                                 </div>
                                 <div class="bg-white bg-opacity-25 p-3 rounded-3">
-                                    <i class="fas fa-upload fa-2x"></i>
+                                    <i class="fas fa-upload fa-2x" style="color: #FB923C;"></i>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -40,15 +40,15 @@
 
                 <!-- FMD Detected Card -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);">
                         <div class="card-body p-4 text-white">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="text-white-50 mb-2">FMD Detected</h6>
-                                    <h2 class="fw-bold mb-0">{{ fmd_detected }}</h2>
+                                    <h6 class="text-white-50 mb-2" style="color: rgba(255,255,255,0.7) !important;">FMD Detected</h6>
+                                    <h2 class="fw-bold mb-0" style="color: white !important;">{{ fmd_detected }}</h2>
                                 </div>
                                 <div class="bg-white bg-opacity-25 p-3 rounded-3">
-                                    <i class="fas fa-heartbeat fa-2x"></i>
+                                    <i class="fas fa-heartbeat fa-2x" style="color: #FB923C;"></i>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -61,15 +61,15 @@
 
                 <!-- Healthy Cattle Card -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #FB923C 0%, #F97316 100%);">
                         <div class="card-body p-4 text-white">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="text-white-50 mb-2">Healthy Cattle</h6>
-                                    <h2 class="fw-bold mb-0">{{ healthy_cattle }}</h2>
+                                    <h6 class="text-white-50 mb-2" style="color: rgba(255,255,255,0.7) !important;">Healthy Cattle</h6>
+                                    <h2 class="fw-bold mb-0" style="color: white !important;">{{ healthy_cattle }}</h2>
                                 </div>
                                 <div class="bg-white bg-opacity-25 p-3 rounded-3">
-                                    <i class="fas fa-check-circle fa-2x"></i>
+                                    <i class="fas fa-check-circle fa-2x" style="color: white;"></i>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -84,12 +84,12 @@
             <!-- Analyze Cattle Image Section -->
             <div class="row mt-4">
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%);">
+                    <div class="card border-0 shadow-sm" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%);">
                         <div class="card-body p-5 text-center text-white">
                             <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-                            <h4 class="fw-bold mb-2">Analyze Cattle Image</h4>
+                            <h4 class="fw-bold mb-2" style="color: white !important;">Analyze Cattle Image</h4>
                             <p class="mb-4">Upload image for FMD detection</p>
-                            <a href="{% url 'upload_image' %}" class="btn btn-light btn-lg px-5 rounded-pill">
+                            <a href="{% url 'upload_image' %}" class="btn btn-light btn-lg px-5 rounded-pill" style="color: #1E3A8A; font-weight: 600;">
                                 <i class="fas fa-upload me-2"></i>
                                 Upload Image
                             </a>

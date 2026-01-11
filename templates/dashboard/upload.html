@@ -9,8 +9,8 @@
     <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
         <!-- Top Header -->
         <div class="bg-white border-bottom p-4">
-            <h4 class="mb-1 fw-bold">Upload Cattle Image</h4>
-            <p class="text-muted mb-0">Upload a clear image of your cattle for FMD detection</p>
+            <h4 class="mb-1 fw-bold" style="color: #FB923C !important;">Upload Cattle Image</h4>
+            <p class="text-muted mb-0">Take a photo or upload an image of your cattle for FMD detection</p>
         </div>
 
         <!-- Upload Form -->
@@ -19,53 +19,108 @@
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-5">
+                            <!-- Camera/Upload Toggle -->
+                            <div class="btn-group w-100 mb-4" role="group">
+                                <button type="button" class="btn btn-outline-primary active" id="uploadModeBtn" onclick="switchMode('upload')" style="border-color: #1E3A8A;">
+                                    <i class="fas fa-folder-open me-2"></i>Upload Image
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" id="cameraModeBtn" onclick="switchMode('camera')" style="border-color: #1E3A8A;">
+                                    <i class="fas fa-camera me-2"></i>Take Photo
+                                </button>
+                            </div>
+
                             <form method="POST" enctype="multipart/form-data" id="uploadForm">
                                 {% csrf_token %}
                                 
-                                <!-- Drag & Drop Area -->
-                                <div class="upload-area border-2 border-dashed rounded-4 p-5 text-center mb-4" style="border-color: #ddd; background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(76, 175, 80, 0.05));">
-                                    <div id="uploadBox">
-                                        <div class="upload-icon mb-3" style="width: 100px; height: 100px; margin: 0 auto; background: linear-gradient(135deg, #2196F3, #4CAF50); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-cloud-upload-alt fa-3x text-white"></i>
+                                <!-- Upload Mode -->
+                                <div id="uploadMode">
+                                    <!-- Drag & Drop Area -->
+                                    <div class="upload-area border-2 border-dashed rounded-4 p-5 text-center mb-4" style="border-color: #1E3A8A; background: linear-gradient(135deg, rgba(30, 58, 138, 0.05), rgba(251, 146, 60, 0.05));">
+                                        <div id="uploadBox">
+                                            <div class="upload-icon mb-3" style="width: 100px; height: 100px; margin: 0 auto; background: linear-gradient(135deg, #1E3A8A, #FB923C); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-cloud-upload-alt fa-3x text-white"></i>
+                                            </div>
+                                            <h5 class="mb-3" style="color: #FB923C;">Drag & Drop Your Image Here</h5>
+                                            <p class="text-muted mb-3">or</p>
+                                            <label for="id_image" class="btn px-5 rounded-pill" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color: white; font-weight: 600;">
+                                                <i class="fas fa-folder-open me-2"></i>
+                                                Browse Files
+                                            </label>
+                                            <input type="file" id="id_image" name="image" class="d-none" accept="image/jpeg,image/png,image/jpg,image/webp">
+                                            <p class="text-muted small mt-3 mb-0">Supports: JPG, PNG, WEBP (Max 10MB)</p>
                                         </div>
-                                        <h5 class="mb-3">Drag & Drop Your Image Here</h5>
-                                        <p class="text-muted mb-3">or</p>
-                                        <label for="id_image" class="btn btn-primary px-5 rounded-pill" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%); border: none;">
-                                            <i class="fas fa-folder-open me-2"></i>
-                                            Browse Files
-                                        </label>
-                                        <input type="file" id="id_image" name="image" class="d-none" accept="image/jpeg,image/png,image/jpg,image/webp" required>
-                                        <p class="text-muted small mt-3 mb-0">Supports: JPG, PNG, WEBP (Max 10MB)</p>
-                                    </div>
-                                    
-                                    <!-- Image Preview -->
-                                    <div id="imagePreview" class="d-none">
-                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded-3 mb-3" style="max-height: 400px;">
-                                        <button type="button" class="btn btn-outline-danger" onclick="removeImage()">
-                                            <i class="fas fa-times me-2"></i>Remove Image
-                                        </button>
+                                        
+                                        <!-- Image Preview -->
+                                        <div id="imagePreview" class="d-none">
+                                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded-3 mb-3" style="max-height: 400px;">
+                                            <button type="button" class="btn btn-outline-danger" onclick="removeImage()">
+                                                <i class="fas fa-times me-2"></i>Remove Image
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+
+                                <!-- Camera Mode -->
+                                <div id="cameraMode" class="d-none">
+                                    <div class="camera-container border-2 rounded-4 p-4 text-center mb-4" style="border-color: #1E3A8A; background: rgba(30, 58, 138, 0.05);">
+                                        <!-- Camera View -->
+                                        <div id="cameraView" class="mb-3">
+                                            <video id="video" autoplay playsinline class="rounded-3" style="width: 100%; max-width: 640px; max-height: 480px; background: #000;"></video>
+                                            <canvas id="canvas" class="d-none"></canvas>
+                                        </div>
+
+                                        <!-- Camera Controls -->
+                                        <div id="cameraControls" class="mb-3">
+                                            <button type="button" class="btn btn-lg me-2" onclick="startCamera()" id="startCameraBtn" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color: white;">
+                                                <i class="fas fa-video me-2"></i>Start Camera
+                                            </button>
+                                            <button type="button" class="btn btn-lg d-none" onclick="capturePhoto()" id="captureBtn" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color: white;">
+                                                <i class="fas fa-camera me-2"></i>Capture Photo
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-lg d-none" onclick="stopCamera()" id="stopCameraBtn">
+                                                <i class="fas fa-stop me-2"></i>Stop Camera
+                                            </button>
+                                        </div>
+
+                                        <!-- Captured Photo Preview -->
+                                        <div id="capturedPreview" class="d-none">
+                                            <img id="capturedImg" src="" alt="Captured" class="img-fluid rounded-3 mb-3" style="max-height: 400px;">
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-warning me-2" onclick="retakePhoto()">
+                                                    <i class="fas fa-redo me-2"></i>Retake Photo
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <p class="text-muted small mb-0 mt-3">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Ensure good lighting and the cattle is clearly visible
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden input to store captured image -->
+                                <input type="hidden" id="capturedImageData" name="captured_image" value="">
 
                                 <!-- Additional Information (Optional) -->
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
-                                        <label for="{{ form.animal_id.id_for_label }}" class="form-label">Animal ID (Optional)</label>
+                                        <label for="{{ form.animal_id.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Animal ID (Optional)</label>
                                         {{ form.animal_id }}
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="{{ form.location.id_for_label }}" class="form-label">Location (Optional)</label>
+                                        <label for="{{ form.location.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Location (Optional)</label>
                                         {{ form.location }}
                                     </div>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes (Optional)</label>
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Notes (Optional)</label>
                                     {{ form.notes }}
                                 </div>
 
                                 <!-- Submit Button -->
-                                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold" id="submitBtn" style="background: linear-gradient(90deg, #2196F3 0%, #4CAF50 100%); border: none;">
+                                <button type="submit" class="btn w-100 py-3 rounded-3 fw-semibold" id="submitBtn" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color: white;">
                                     <i class="fas fa-paper-plane me-2"></i>
                                     Upload and Analyze
                                 </button>
@@ -79,14 +134,115 @@
 </div>
 
 <script>
+    let stream = null;
+    let currentMode = 'upload';
+
+    // Switch between upload and camera mode
+    function switchMode(mode) {
+        currentMode = mode;
+        
+        if (mode === 'upload') {
+            document.getElementById('uploadMode').classList.remove('d-none');
+            document.getElementById('cameraMode').classList.add('d-none');
+            document.getElementById('uploadModeBtn').classList.add('active');
+            document.getElementById('cameraModeBtn').classList.remove('active');
+            stopCamera();
+        } else {
+            document.getElementById('uploadMode').classList.add('d-none');
+            document.getElementById('cameraMode').classList.remove('d-none');
+            document.getElementById('uploadModeBtn').classList.remove('active');
+            document.getElementById('cameraModeBtn').classList.add('active');
+        }
+    }
+
+    // Start camera
+    async function startCamera() {
+        try {
+            const constraints = {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'environment' // Use back camera on mobile
+                }
+            };
+
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            
+            // Update UI
+            document.getElementById('startCameraBtn').classList.add('d-none');
+            document.getElementById('captureBtn').classList.remove('d-none');
+            document.getElementById('stopCameraBtn').classList.remove('d-none');
+            document.getElementById('capturedPreview').classList.add('d-none');
+            
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            alert('Unable to access camera. Please check permissions or use the upload option.');
+        }
+    }
+
+    // Capture photo from video
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const capturedImg = document.getElementById('capturedImg');
+        
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to data URL
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        
+        // Display captured image
+        capturedImg.src = imageDataUrl;
+        document.getElementById('capturedPreview').classList.remove('d-none');
+        document.getElementById('cameraView').classList.add('d-none');
+        document.getElementById('cameraControls').classList.add('d-none');
+        
+        // Store image data for upload
+        document.getElementById('capturedImageData').value = imageDataUrl;
+        
+        // Stop camera
+        stopCamera();
+    }
+
+    // Retake photo
+    function retakePhoto() {
+        document.getElementById('capturedPreview').classList.add('d-none');
+        document.getElementById('cameraView').classList.remove('d-none');
+        document.getElementById('cameraControls').classList.remove('d-none');
+        document.getElementById('capturedImageData').value = '';
+        startCamera();
+    }
+
+    // Stop camera
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        
+        const video = document.getElementById('video');
+        video.srcObject = null;
+        
+        // Reset UI
+        document.getElementById('startCameraBtn').classList.remove('d-none');
+        document.getElementById('captureBtn').classList.add('d-none');
+        document.getElementById('stopCameraBtn').classList.add('d-none');
+    }
+
+    // Handle file selection for upload mode
     const imageInput = document.getElementById('id_image');
     const uploadBox = document.getElementById('uploadBox');
     const imagePreview = document.getElementById('imagePreview');
     const previewImg = document.getElementById('previewImg');
-    const uploadForm = document.getElementById('uploadForm');
-    const submitBtn = document.getElementById('submitBtn');
 
-    // Handle file selection
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -99,19 +255,19 @@
     
     uploadArea.addEventListener('dragover', function(e) {
         e.preventDefault();
-        uploadArea.style.borderColor = '#2196F3';
-        uploadArea.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+        uploadArea.style.borderColor = '#FB923C';
+        uploadArea.style.backgroundColor = 'rgba(251, 146, 60, 0.1)';
     });
 
     uploadArea.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.borderColor = '#1E3A8A';
         uploadArea.style.backgroundColor = '';
     });
 
     uploadArea.addEventListener('drop', function(e) {
         e.preventDefault();
-        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.borderColor = '#1E3A8A';
         uploadArea.style.backgroundColor = '';
         
         const file = e.dataTransfer.files[0];
@@ -139,9 +295,38 @@
     }
 
     // Form submission
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+
     uploadForm.addEventListener('submit', function(e) {
+        // Check if we have an image (either uploaded or captured)
+        const hasUploadedImage = imageInput.files.length > 0;
+        const hasCapturedImage = document.getElementById('capturedImageData').value !== '';
+        
+        if (!hasUploadedImage && !hasCapturedImage) {
+            e.preventDefault();
+            alert('Please upload an image or capture a photo before submitting.');
+            return;
+        }
+        
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading and Analyzing...';
+    });
+
+    // Clean up camera on page unload
+    window.addEventListener('beforeunload', function() {
+        stopCamera();
     });
 </script>
+
+<style>
+    .btn-group .btn.active {
+        background-color: #1E3A8A;
+        color: white;
+    }
+    
+    #video {
+        border: 2px solid #1E3A8A;
+    }
+</style>
 {% endblock %}
