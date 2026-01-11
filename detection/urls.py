@@ -18,6 +18,11 @@ urlpatterns = [
     path('history/', views.history_view, name='history'),
     path('detection/<uuid:detection_id>/', views.detection_detail_view, name='detection_detail'),
     
+    # Report URLs
+    path('reports/', views.reports_view, name='reports'),
+    path('reports/generate/<str:report_type>/', views.generate_report_view, name='generate_report'),
+    path('reports/email/<str:report_type>/', views.email_report_view, name='email_report'),
+    
     # Help and Support
     path('help/', views.help_view, name='help'),
 ]

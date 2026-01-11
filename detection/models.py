@@ -92,3 +92,32 @@ class SystemStatistics(models.Model):
     
     def __str__(self):
         return f"Stats for {self.date}"
+
+
+class Report(models.Model):
+    """Model to track generated reports"""
+    REPORT_TYPE_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    generated_at = models.DateTimeField(auto_now_add=True)
+    
+    # Statistics snapshot
+    total_scans = models.IntegerField(default=0)
+    fmd_detected = models.IntegerField(default=0)
+    healthy_cattle = models.IntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-generated_at']
+        verbose_name = 'Report'
+        verbose_name_plural = 'Reports'
+    
+    def __str__(self):
+        return f"{self.get_report_type_display()} Report - {self.generated_at.strftime('%Y-%m-%d')}"

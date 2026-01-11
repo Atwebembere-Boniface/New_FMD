@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Count, Q
-from .models import UserProfile, Detection, SystemStatistics
+from .models import UserProfile, Detection, SystemStatistics, Report
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -126,4 +126,32 @@ class SystemStatisticsAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         """Prevent manual addition of statistics"""
+        return False
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ['id_short', 'user', 'report_type', 'date_range', 'stats_summary', 'generated_at']
+    list_filter = ['report_type', 'generated_at', 'user']
+    search_fields = ['user__username', 'id']
+    readonly_fields = ['id', 'generated_at', 'start_date', 'end_date', 'total_scans', 'fmd_detected', 'healthy_cattle']
+    
+    def id_short(self, obj):
+        return str(obj.id)[:8]
+    id_short.short_description = 'ID'
+    
+    def date_range(self, obj):
+        return f"{obj.start_date.strftime('%Y-%m-%d')} to {obj.end_date.strftime('%Y-%m-%d')}"
+    date_range.short_description = 'Period'
+    
+    def stats_summary(self, obj):
+        return format_html(
+            '<span style="color: blue;">{} scans</span> | '
+            '<span style="color: red;">{} FMD</span> | '
+            '<span style="color: green;">{} Healthy</span>',
+            obj.total_scans, obj.fmd_detected, obj.healthy_cattle
+        )
+    stats_summary.short_description = 'Summary'
+    
+    def has_add_permission(self, request):
         return False
