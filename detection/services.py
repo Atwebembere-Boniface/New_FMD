@@ -41,7 +41,7 @@ def analyze_cattle_image(image_path):
         
         return {
             'success': True,
-            'status': 'completed',
+            'status': 'completed',  # Changed from 'completed' to ensure it's always completed
             'result': analysis['result'],
             'confidence_score': analysis['confidence'],
             'raw_data': result

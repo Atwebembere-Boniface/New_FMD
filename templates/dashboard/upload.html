@@ -102,23 +102,6 @@
                                 <!-- Hidden input to store captured image -->
                                 <input type="hidden" id="capturedImageData" name="captured_image" value="">
 
-                                <!-- Additional Information (Optional) -->
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label for="{{ form.animal_id.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Animal ID (Optional)</label>
-                                        {{ form.animal_id }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="{{ form.location.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Location (Optional)</label>
-                                        {{ form.location }}
-                                    </div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="{{ form.notes.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Notes (Optional)</label>
-                                    {{ form.notes }}
-                                </div>
-
                                 <!-- Submit Button -->
                                 <button type="submit" class="btn w-100 py-3 rounded-3 fw-semibold" id="submitBtn" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color: white;">
                                     <i class="fas fa-paper-plane me-2"></i>

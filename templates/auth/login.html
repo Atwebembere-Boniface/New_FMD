@@ -1,6 +1,4 @@
-
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
 <div class="auth-wrapper d-flex align-items-center justify-content-center">
@@ -16,8 +14,18 @@
                             </div>
                             <h3 class="fw-bold mb-2" style="color: #FB923C !important;">FMD Early Detection System</h3>
                             <p class="text-muted mb-1">Simba Farms, Ibanda District</p>
-                            <!-- <p class="text-muted small">AI-Powered Cattle Health Monitoring</p> -->
+                            <p class="text-muted small">AI-Powered Cattle Health Monitoring</p>
                         </div>
+
+                        <!-- Success/Error Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
 
                         <!-- Login Form -->
                         <form method="POST" novalidate>
@@ -25,10 +33,10 @@
                             
                             <!-- Email Address -->
                             <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Email Address</label>
+                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Email or Username</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light" style="border-color: #1E3A8A;">
-                                        <i class="fas fa-envelope" style="color: #FB923C;"></i>
+                                        <i class="fas fa-user" style="color: #FB923C;"></i>
                                     </span>
                                     {{ form.username }}
                                 </div>
@@ -79,7 +87,7 @@
     .auth-wrapper {
         min-height: 100vh;
         background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
-                    url("{% static 'images/background-img.jpg' %}") center/cover;
+                    url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
         background-attachment: fixed;
     }
     

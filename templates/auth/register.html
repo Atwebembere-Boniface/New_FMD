@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
 <div class="auth-wrapper d-flex align-items-center justify-content-center py-5">
@@ -132,7 +131,7 @@
     .auth-wrapper {
         min-height: 100vh;
         background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
-                    url("{% static 'images/background-img.jpg' %}") center/cover;
+                    url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
         background-attachment: fixed;
     }
     

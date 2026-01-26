@@ -104,13 +104,15 @@ class UserRegistrationForm(UserCreationForm):
 class UserLoginForm(AuthenticationForm):
     """Custom login form with styled fields"""
     username = forms.CharField(
+        label='Email or Username',
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter your email',
-            'autocomplete': 'email'
+            'placeholder': 'Enter your email or username',
+            'autocomplete': 'username'
         })
     )
     password = forms.CharField(
+        label='Password',
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your password',

@@ -6,8 +6,8 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from .forms import UserRegistrationForm, UserLoginForm, DetectionUploadForm
-from .models import Detection, SystemStatistics, UserProfile
-from .services import analyze_cattle_image  # Import the service
+from .models import Detection, SystemStatistics, UserProfile, Report
+from .services import analyze_cattle_image
 
 # ========================================
 # AUTHENTICATION VIEWS
@@ -22,9 +22,12 @@ def register_view(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, f'Welcome {user.first_name}! Your account has been created successfully.')
-            return redirect('dashboard')
+            # Don't auto-login, redirect to login page instead
+            messages.success(
+                request, 
+                f'Account created successfully! Please login with your credentials.'
+            )
+            return redirect('login')  # Redirect to login page
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -130,9 +133,6 @@ def upload_image_view(request):
             detection = Detection(
                 user=request.user,
                 image=image_data,
-                animal_id=request.POST.get('animal_id', ''),
-                location=request.POST.get('location', ''),
-                notes=request.POST.get('notes', ''),
                 status='analyzing'
             )
             detection.save()
@@ -161,7 +161,7 @@ def upload_image_view(request):
             
             if analysis_result['success']:
                 # Update detection with results
-                detection.status = analysis_result['status']
+                detection.status = 'completed'  # Explicitly set to completed
                 detection.result = analysis_result['result']
                 detection.confidence_score = analysis_result['confidence_score']
                 detection.analyzed_at = timezone.now()

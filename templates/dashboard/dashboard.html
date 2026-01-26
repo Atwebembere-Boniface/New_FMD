@@ -115,7 +115,6 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th class="px-4 py-3">Date</th>
-                                                <th>Animal ID</th>
                                                 <th>Status</th>
                                                 <th>Result</th>
                                                 <th>Confidence</th>
@@ -126,7 +125,6 @@
                                             {% for detection in recent_detections %}
                                                 <tr>
                                                     <td class="px-4 py-3">{{ detection.uploaded_at|date:"M d, Y H:i" }}</td>
-                                                    <td>{{ detection.animal_id|default:"N/A" }}</td>
                                                     <td>
                                                         <span class="badge 
                                                             {% if detection.status == 'completed' %}bg-success

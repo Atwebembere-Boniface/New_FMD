@@ -58,8 +58,6 @@
                                     <tr>
                                         <th class="px-4 py-3">Image</th>
                                         <th>Date & Time</th>
-                                        <th>Animal ID</th>
-                                        <th>Location</th>
                                         <th>Status</th>
                                         <th>Result</th>
                                         <th>Confidence</th>
@@ -73,8 +71,6 @@
                                                 <img src="{{ detection.image.url }}" alt="Cattle" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
                                             </td>
                                             <td>{{ detection.uploaded_at|date:"M d, Y H:i" }}</td>
-                                            <td>{{ detection.animal_id|default:"N/A" }}</td>
-                                            <td>{{ detection.location|default:"N/A" }}</td>
                                             <td>
                                                 <span class="badge 
                                                     {% if detection.status == 'completed' %}bg-success

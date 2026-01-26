@@ -99,17 +99,7 @@
 
                             <hr>
 
-                            <!-- Metadata -->
-                            <div class="mb-3">
-                                <label class="text-muted small">Animal ID</label>
-                                <p class="mb-0 fw-semibold">{{ detection.animal_id|default:"Not specified" }}</p>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="text-muted small">Location</label>
-                                <p class="mb-0 fw-semibold">{{ detection.location|default:"Not specified" }}</p>
-                            </div>
-
+                            <!-- Uploaded At -->
                             <div class="mb-3">
                                 <label class="text-muted small">Uploaded At</label>
                                 <p class="mb-0 fw-semibold">{{ detection.uploaded_at|date:"F d, Y H:i:s" }}</p>
@@ -119,13 +109,6 @@
                                 <div class="mb-3">
                                     <label class="text-muted small">Analyzed At</label>
                                     <p class="mb-0 fw-semibold">{{ detection.analyzed_at|date:"F d, Y H:i:s" }}</p>
-                                </div>
-                            {% endif %}
-
-                            {% if detection.notes %}
-                                <div class="mb-3">
-                                    <label class="text-muted small">Notes</label>
-                                    <p class="mb-0">{{ detection.notes }}</p>
                                 </div>
                             {% endif %}
                         </div>
