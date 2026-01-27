@@ -33,20 +33,18 @@ if DEBUG:
     ]
 else:
     ALLOWED_HOSTS = [
-        'fmd-project.onrender.com',   # 🔴 CHANGE to your real Render URL
+        'new-fmd-1.onrender.com',
         '.onrender.com',
     ]
 
-# ALLOWED_HOSTS = [
-#     'your-app-name.onrender.com',
-#     '.onrender.com',
-# ]
+
 
 
 # --------------------------------------------------
 # CSRF (REQUIRED FOR RENDER)
 # --------------------------------------------------
 CSRF_TRUSTED_ORIGINS = [
+    'https://new-fmd-1.onrender.com',
     'https://*.onrender.com',
 ]
 
