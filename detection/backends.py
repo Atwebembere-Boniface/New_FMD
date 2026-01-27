@@ -4,6 +4,9 @@ Custom authentication backend to allow login with email or username
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.db.models import Q
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EmailOrUsernameBackend(ModelBackend):
@@ -20,26 +23,26 @@ class EmailOrUsernameBackend(ModelBackend):
             return None
         
         try:
-            # Try to find user by username or email
-            user = User.objects.get(Q(username=username) | Q(email=username))
+            # Try to find user by username or email (case-insensitive)
+            user = User.objects.filter(
+                Q(username__iexact=username) | Q(email__iexact=username)
+            ).first()
+            
+            if user is None:
+                logger.info(f"No user found with username/email: {username}")
+                return None
             
             # Check if password is correct
             if user.check_password(password):
+                logger.info(f"User {user.username} authenticated successfully")
                 return user
+            else:
+                logger.info(f"Invalid password for user: {user.username}")
+                return None
             
-        except User.DoesNotExist:
-            # Run the default password hasher once to reduce timing
-            # difference between existing and non-existing users
-            User().set_password(password)
+        except Exception as e:
+            logger.error(f"Authentication error: {str(e)}")
             return None
-        
-        except User.MultipleObjectsReturned:
-            # This shouldn't happen if emails are unique, but handle it
-            user = User.objects.filter(Q(username=username) | Q(email=username)).first()
-            if user and user.check_password(password):
-                return user
-        
-        return None
     
     def get_user(self, user_id):
         """
