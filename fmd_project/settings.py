@@ -179,18 +179,27 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --------------------------------------------------
 # EMAIL
 # --------------------------------------------------
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-    PASSWORD_RESET_TIMEOUT = 86400  # 1 day
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# else:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'atwebembereboniface@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','nkcqkiccyxmtlbgk')
+DEFAULT_FROM_EMAIL = 'atwebembereboniface@gmail.com'
+SERVER_EMAIL = 'atwebembereboniface@gmail.com'
+PASSWORD_RESET_TIMEOUT = 86400  # 1 day
 
+# IMPORTANT: Add these lines too
+ADMINS = [('Admin', 'atwebembereboniface@gmail.com')]
+MANAGERS = ADMINS
+
+
+
+# For development/testing, use console backend:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --------------------------------------------------
 # SECURITY (PRODUCTION ONLY)
 # --------------------------------------------------

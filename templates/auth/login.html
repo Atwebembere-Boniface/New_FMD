@@ -63,6 +63,17 @@
                                 {% endif %}
                             </div>
 
+                            <!-- In your login form, after the password field -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="remember">
+        <label class="form-check-label" for="remember">Remember me</label>
+    </div>
+    <a href="{% url 'password_reset' %}" class="text-decoration-none">
+        Forgot Password?
+    </a>
+</div>
+
                             <!-- Login Button -->
                             <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none;">
                                 Login to Dashboard
