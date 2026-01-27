@@ -1,24 +1,58 @@
 """
-Django settings for fmd_project - Development & Production Ready
+Django settings for fmd_project
+Development & Production (Render) Ready
 """
+
 import os
 from pathlib import Path
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# --------------------------------------------------
+# BASE DIR
+# --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security Settings
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key-change-in-production-12345')
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'  # Changed default to 'True' for development
+# --------------------------------------------------
+# SECURITY
+# --------------------------------------------------
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-development-key-change-in-production'
+)
 
-# Allow all hosts in development, restrict in production
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+# --------------------------------------------------
+# ALLOWED HOSTS
+# --------------------------------------------------
 if DEBUG:
-    ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '0.0.0.0', 'fmd.local']
+    ALLOWED_HOSTS = [
+        'localhost',
+        '127.0.0.1',
+        '0.0.0.0',
+    ]
 else:
-    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '.onrender.com').split(',')
+    ALLOWED_HOSTS = [
+        'fmd-project.onrender.com',   # 🔴 CHANGE to your real Render URL
+        '.onrender.com',
+    ]
 
-# Application definition
+# ALLOWED_HOSTS = [
+#     'your-app-name.onrender.com',
+#     '.onrender.com',
+# ]
+
+
+# --------------------------------------------------
+# CSRF (REQUIRED FOR RENDER)
+# --------------------------------------------------
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+]
+
+# --------------------------------------------------
+# APPLICATIONS
+# --------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -26,12 +60,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'detection',
 ]
 
+# --------------------------------------------------
+# MIDDLEWARE
+# --------------------------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files on Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -40,8 +78,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# --------------------------------------------------
+# URLS / WSGI
+# --------------------------------------------------
 ROOT_URLCONF = 'fmd_project.urls'
+WSGI_APPLICATION = 'fmd_project.wsgi.application'
 
+# --------------------------------------------------
+# TEMPLATES
+# --------------------------------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -58,20 +103,17 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'fmd_project.wsgi.application'
-
-# Database Configuration
+# --------------------------------------------------
+# DATABASE
+# --------------------------------------------------
 if os.environ.get('DATABASE_URL'):
-    # Production database (PostgreSQL on Render)
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
 else:
-    # Development database (SQLite)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -79,7 +121,9 @@ else:
         }
     }
 
-# Password validation
+# --------------------------------------------------
+# PASSWORD VALIDATION
+# --------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -87,18 +131,21 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# --------------------------------------------------
+# INTERNATIONALIZATION
+# --------------------------------------------------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Kampala'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# --------------------------------------------------
+# STATIC FILES (RENDER READY)
+# --------------------------------------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# WhiteNoise configuration for serving static files
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -108,61 +155,70 @@ STORAGES = {
     },
 }
 
-# Media files (User uploads)
+# --------------------------------------------------
+# MEDIA FILES
+# --------------------------------------------------
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Authentication settings
+# --------------------------------------------------
+# AUTH
+# --------------------------------------------------
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Custom authentication backend to allow email or username login
 AUTHENTICATION_BACKENDS = [
-    'detection.backends.EmailOrUsernameBackend',  # Custom backend
-    'django.contrib.auth.backends.ModelBackend',   # Default backend (fallback)
+    'detection.backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-# File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+# --------------------------------------------------
+# DEFAULT PK
+# --------------------------------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Security settings - Apply based on DEBUG mode
+# --------------------------------------------------
+# EMAIL
+# --------------------------------------------------
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    PASSWORD_RESET_TIMEOUT = 86400  # 1 day
+
+# --------------------------------------------------
+# SECURITY (PRODUCTION ONLY)
+# --------------------------------------------------
 if not DEBUG:
-    # Production security settings
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    X_FRAME_OPTIONS = 'DENY'
-else:
-    # Development settings - NO HTTPS enforcement
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-    SECURE_HSTS_SECONDS = 0
 
-# Logging configuration
+    X_FRAME_OPTIONS = 'DENY'
+
+# --------------------------------------------------
+# LOGGING
+# --------------------------------------------------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
     },
     'loggers': {
@@ -170,20 +226,5 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
-        'detection': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-        },
     },
 }
-
-# Email configuration (for production)
-if not DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
