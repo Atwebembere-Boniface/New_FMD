@@ -188,7 +188,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'atwebembereboniface@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','nkcqkiccyxmtlbgk')
-DEFAULT_FROM_EMAIL = 'atwebembereboniface@gmail.com'
+DEFAULT_FROM_EMAIL = 'FMD Detection System <atwebembereboniface@gmail.com>'
 SERVER_EMAIL = 'atwebembereboniface@gmail.com'
 PASSWORD_RESET_TIMEOUT = 86400  # 1 day
 
