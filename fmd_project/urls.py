@@ -20,3 +20,5 @@ if settings.DEBUG:
 admin.site.site_header = "FMD Detection System Admin"
 admin.site.site_title = "FMD Admin Portal"
 admin.site.index_title = "Welcome to FMD Detection System Administration"
+
+

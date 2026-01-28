@@ -60,4 +60,7 @@ urlpatterns = [
     
     # Help and Support
     path('help/', views.help_view, name='help'),
+    #password-reset
+    path('test-email-config/', views.test_email_config, name='test_email_config'),
+    
 ]

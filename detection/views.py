@@ -399,3 +399,41 @@ def email_report_view(request, report_type):
     except Exception as e:
         messages.error(request, f'Error sending report: {str(e)}')
         return redirect('reports')
+    
+
+
+#password-reset
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
+import os
+
+@login_required
+def test_email_config(request):
+    """Test email configuration"""
+    config = {
+        'EMAIL_BACKEND': settings.EMAIL_BACKEND,
+        'EMAIL_HOST': getattr(settings, 'EMAIL_HOST', 'Not set'),
+        'EMAIL_PORT': getattr(settings, 'EMAIL_PORT', 'Not set'),
+        'EMAIL_USE_TLS': getattr(settings, 'EMAIL_USE_TLS', 'Not set'),
+        'EMAIL_HOST_USER': settings.EMAIL_HOST_USER or 'NOT SET',
+        'EMAIL_HOST_PASSWORD': '***' + settings.EMAIL_HOST_PASSWORD[-4:] if settings.EMAIL_HOST_PASSWORD else 'NOT SET',
+        'DEBUG': settings.DEBUG,
+    }
+    
+    # Try to send test email
+    try:
+        result = send_mail(
+            'Test Email from Render',
+            'This is a test email to verify SMTP configuration.',
+            settings.DEFAULT_FROM_EMAIL,
+            [request.user.email],
+            fail_silently=False,
+        )
+        config['email_sent'] = True
+        config['result'] = f'{result} email(s) sent'
+    except Exception as e:
+        config['email_sent'] = False
+        config['error'] = str(e)
+    
+    return JsonResponse(config, json_dumps_params={'indent': 2})    
