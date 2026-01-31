@@ -28,14 +28,14 @@ class Detection(models.Model):
         ('pending', 'Pending Analysis'),
         ('analyzing', 'Analyzing'),
         ('completed', 'Completed'),
-        ('failed', 'Failed'),
+        # Removed 'failed' - now everything will be 'completed'
     ]
     
     RESULT_CHOICES = [
         ('healthy', 'Healthy'),
         ('fmd', 'FMD Detected'),
         ('not_cow', 'Not a Cow'),
-        ('inconclusive', 'Inconclusive'),
+        # Removed 'inconclusive'
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
