@@ -3,6 +3,10 @@ from django.utils.html import format_html
 from django.db.models import Count, Q
 from .models import UserProfile, Detection, SystemStatistics, Report
 
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'farm_name', 'location', 'phone_number', 'is_verified', 'created_at']
@@ -155,3 +159,27 @@ class ReportAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False
+
+
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Profile'
+    fields = ('role', 'phone_number', 'farm_name', 'location', 'license_number', 'specialization', 'is_verified')
+
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_role', 'is_staff')
+    
+    def get_role(self, obj):
+        return obj.profile.get_role_display() if hasattr(obj, 'profile') else 'N/A'
+    get_role.short_description = 'Role'
+
+# Unregister the default User admin and register our customized version
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+
+
+
+        

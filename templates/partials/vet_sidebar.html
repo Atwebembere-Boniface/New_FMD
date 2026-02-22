@@ -1,0 +1,84 @@
+<!-- Vet Sidebar -->
+<div class="sidebar text-white vh-100 position-fixed" style="width: 250px; left: 0; top: 0; background: linear-gradient(180deg, #064E3B 0%, #065F46 50%, #047857 100%); z-index: 1000;">
+    <!-- Logo -->
+    <div class="p-4 text-center border-bottom" style="border-color: rgba(255,255,255,0.15) !important;">
+        <div class="mb-2" style="width: 52px; height: 52px; background: linear-gradient(135deg, #FB923C, #F97316); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+            <i class="fas fa-stethoscope fa-lg" style="color: white;"></i>
+        </div>
+        <h6 class="mb-0 fw-bold" style="color: white; font-size: 13px;">Vet Dashboard</h6>
+        <small style="color: rgba(255,255,255,0.6); font-size: 11px;">FMD Detection System</small>
+    </div>
+
+    <!-- Vet Info -->
+    <div class="px-4 py-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div class="d-flex align-items-center">
+            <div style="width: 36px; height: 36px; background: rgba(251,146,60,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-user-md" style="color: #FB923C; font-size: 14px;"></i>
+            </div>
+            <div class="ms-2">
+                <div style="color: white; font-size: 12px; font-weight: 600;">Dr. {{ request.user.get_full_name|default:request.user.email }}</div>
+                <div style="color: rgba(255,255,255,0.5); font-size: 10px;">Veterinary Doctor</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-2 px-2">
+        <p style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px 4px;">Menu</p>
+
+        <a href="{% url 'vet_dashboard' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_dashboard' %}active{% endif %}">
+            <i class="fas fa-th-large me-2"></i> Dashboard
+        </a>
+        <a href="{% url 'vet_uploads' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_uploads' %}active{% endif %}">
+            <i class="fas fa-images me-2"></i> All Farm Detections
+        </a>
+        <a href="{% url 'upload_image' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}">
+            <i class="fas fa-cloud-upload-alt me-2"></i> Upload & Detect
+        </a>
+
+        <p style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 12px 4px;">Reports</p>
+        <a href="{% url 'vet_generate_report' 'daily' %}" class="vet-nav-link">
+            <i class="fas fa-file-pdf me-2"></i> Daily Report
+        </a>
+        <a href="{% url 'vet_generate_report' 'weekly' %}" class="vet-nav-link">
+            <i class="fas fa-file-pdf me-2"></i> Weekly Report
+        </a>
+        <a href="{% url 'vet_generate_report' 'monthly' %}" class="vet-nav-link">
+            <i class="fas fa-file-pdf me-2"></i> Monthly Report
+        </a>
+        <a href="{% url 'vet_generate_report' 'all' %}" class="vet-nav-link">
+            <i class="fas fa-file-pdf me-2"></i> All-Time Report
+        </a>
+    </nav>
+
+    <!-- Logout -->
+    <div class="position-absolute bottom-0 w-100 p-3">
+        <a href="{% url 'logout' %}" class="btn w-100 py-2" style="background: rgba(239,68,68,0.2); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.3); font-size: 13px; border-radius: 8px;">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
+        </a>
+    </div>
+</div>
+
+<style>
+.vet-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+.vet-nav-link:hover {
+    background: rgba(251,146,60,0.15);
+    color: white;
+}
+.vet-nav-link.active {
+    background: rgba(251,146,60,0.25);
+    color: white;
+    font-weight: 600;
+    border-left: 3px solid #FB923C;
+}
+</style>

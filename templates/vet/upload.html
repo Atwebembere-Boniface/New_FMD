@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    {% include 'partials/vet_sidebar.html' %}
+
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px); background: #F0FDF4; min-height: 100vh;">
+        <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+            <a href="{% url 'vet_dashboard' %}" class="btn btn-sm me-3" style="background:#DCFCE7;color:#16A34A;border:none;">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="mb-0 fw-bold" style="color: #064E3B;">Upload & Detect FMD</h4>
+                <p class="text-muted mb-0" style="font-size:13px;">Upload a cattle image for AI-powered FMD detection</p>
+            </div>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+                            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                        <div class="card-body p-5">
+                            <div class="btn-group w-100 mb-4" role="group">
+                                <button type="button" class="btn btn-outline-success active" id="uploadModeBtn" onclick="switchMode('upload')">
+                                    <i class="fas fa-folder-open me-2"></i>Upload Image
+                                </button>
+                                <button type="button" class="btn btn-outline-success" id="cameraModeBtn" onclick="switchMode('camera')">
+                                    <i class="fas fa-camera me-2"></i>Take Photo
+                                </button>
+                            </div>
+
+                            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                                {% csrf_token %}
+
+                                <div id="uploadMode">
+                                    <div class="upload-area border-2 border-dashed rounded-4 p-5 text-center mb-4" style="border-color:#064E3B; background:rgba(4,78,59,0.03);">
+                                        <div id="uploadBox">
+                                            <div style="width:90px;height:90px;margin:0 auto 16px;background:linear-gradient(135deg,#064E3B,#FB923C);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                                <i class="fas fa-cloud-upload-alt fa-2x text-white"></i>
+                                            </div>
+                                            <h5 class="mb-2" style="color:#FB923C;">Drag & Drop Your Image Here</h5>
+                                            <p class="text-muted mb-3">or</p>
+                                            <label for="id_image" class="btn px-5 rounded-pill" style="background:linear-gradient(90deg,#064E3B,#FB923C);color:white;border:none;font-weight:600;">
+                                                <i class="fas fa-folder-open me-2"></i>Browse Files
+                                            </label>
+                                            <input type="file" id="id_image" name="image" class="d-none" accept="image/jpeg,image/png,image/jpg,image/webp">
+                                            <p class="text-muted small mt-3 mb-0">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                                        </div>
+                                        <div id="imagePreview" class="d-none">
+                                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded-3 mb-3" style="max-height:350px;">
+                                            <button type="button" class="btn btn-outline-danger" onclick="removeImage()">
+                                                <i class="fas fa-times me-2"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="cameraMode" class="d-none">
+                                    <div class="camera-container border-2 rounded-4 p-4 text-center mb-4" style="border-color:#064E3B;background:rgba(4,78,59,0.03);">
+                                        <div id="cameraView" class="mb-3">
+                                            <video id="video" autoplay playsinline class="rounded-3" style="width:100%;max-width:640px;max-height:480px;background:#000;border:2px solid #064E3B;"></video>
+                                            <canvas id="canvas" class="d-none"></canvas>
+                                        </div>
+                                        <div id="cameraControls" class="mb-3">
+                                            <button type="button" class="btn btn-lg me-2" onclick="startCamera()" id="startCameraBtn" style="background:linear-gradient(90deg,#064E3B,#FB923C);color:white;border:none;">
+                                                <i class="fas fa-video me-2"></i>Start Camera
+                                            </button>
+                                            <button type="button" class="btn btn-lg d-none" onclick="capturePhoto()" id="captureBtn" style="background:linear-gradient(90deg,#064E3B,#FB923C);color:white;border:none;">
+                                                <i class="fas fa-camera me-2"></i>Capture
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-lg d-none" onclick="stopCamera()" id="stopCameraBtn">
+                                                <i class="fas fa-stop me-2"></i>Stop
+                                            </button>
+                                        </div>
+                                        <div id="capturedPreview" class="d-none">
+                                            <img id="capturedImg" src="" alt="Captured" class="img-fluid rounded-3 mb-3" style="max-height:350px;">
+                                            <button type="button" class="btn btn-warning me-2" onclick="retakePhoto()">
+                                                <i class="fas fa-redo me-2"></i>Retake
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="capturedImageData" name="captured_image" value="">
+
+                                <!-- Additional fields -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold" style="color:#064E3B;">Animal ID (optional)</label>
+                                        <input type="text" name="animal_id" class="form-control" placeholder="e.g. COW-001">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold" style="color:#064E3B;">Location (optional)</label>
+                                        <input type="text" name="location" class="form-control" placeholder="e.g. Pen A">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold" style="color:#064E3B;">Veterinary Notes (optional)</label>
+                                        <textarea name="notes" class="form-control" rows="2" placeholder="Observations, symptoms..."></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn w-100 py-3 rounded-3 fw-semibold" id="submitBtn" style="background:linear-gradient(90deg,#064E3B,#FB923C);color:white;border:none;">
+                                    <i class="fas fa-paper-plane me-2"></i>Upload and Analyze
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let stream = null;
+function switchMode(mode) {
+    if (mode === 'upload') {
+        document.getElementById('uploadMode').classList.remove('d-none');
+        document.getElementById('cameraMode').classList.add('d-none');
+        document.getElementById('uploadModeBtn').classList.add('active');
+        document.getElementById('cameraModeBtn').classList.remove('active');
+        stopCamera();
+    } else {
+        document.getElementById('uploadMode').classList.add('d-none');
+        document.getElementById('cameraMode').classList.remove('d-none');
+        document.getElementById('uploadModeBtn').classList.remove('active');
+        document.getElementById('cameraModeBtn').classList.add('active');
+    }
+}
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        document.getElementById('video').srcObject = stream;
+        document.getElementById('startCameraBtn').classList.add('d-none');
+        document.getElementById('captureBtn').classList.remove('d-none');
+        document.getElementById('stopCameraBtn').classList.remove('d-none');
+        document.getElementById('capturedPreview').classList.add('d-none');
+    } catch(e) { alert('Unable to access camera. Use upload option instead.'); }
+}
+function capturePhoto() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    document.getElementById('capturedImg').src = dataUrl;
+    document.getElementById('capturedPreview').classList.remove('d-none');
+    document.getElementById('cameraView').classList.add('d-none');
+    document.getElementById('cameraControls').classList.add('d-none');
+    document.getElementById('capturedImageData').value = dataUrl;
+    stopCamera();
+}
+function retakePhoto() {
+    document.getElementById('capturedPreview').classList.add('d-none');
+    document.getElementById('cameraView').classList.remove('d-none');
+    document.getElementById('cameraControls').classList.remove('d-none');
+    document.getElementById('capturedImageData').value = '';
+    startCamera();
+}
+function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    document.getElementById('video').srcObject = null;
+    document.getElementById('startCameraBtn').classList.remove('d-none');
+    document.getElementById('captureBtn').classList.add('d-none');
+    document.getElementById('stopCameraBtn').classList.add('d-none');
+}
+const imageInput = document.getElementById('id_image');
+imageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('uploadBox').classList.add('d-none');
+            document.getElementById('imagePreview').classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+function removeImage() {
+    imageInput.value = '';
+    document.getElementById('uploadBox').classList.remove('d-none');
+    document.getElementById('imagePreview').classList.add('d-none');
+}
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const hasFile = imageInput.files.length > 0;
+    const hasCaptured = document.getElementById('capturedImageData').value !== '';
+    if (!hasFile && !hasCaptured) {
+        e.preventDefault();
+        alert('Please upload an image or capture a photo.');
+        return;
+    }
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+});
+window.addEventListener('beforeunload', stopCamera);
+</script>
+{% endblock %}

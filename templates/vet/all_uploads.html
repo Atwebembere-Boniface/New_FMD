@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    {% include 'partials/vet_sidebar.html' %}
+
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px); background: #F0FDF4; min-height: 100vh;">
+        <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0 fw-bold" style="color: #064E3B;">All Farm Detections</h4>
+                <small class="text-muted">System-wide detection records — all users</small>
+            </div>
+            <a href="{% url 'upload_image' %}" class="btn fw-semibold" style="background:linear-gradient(90deg,#064E3B,#FB923C);color:white;border:none;font-size:13px;">
+                <i class="fas fa-upload me-2"></i>Upload & Detect
+            </a>
+        </div>
+
+        <div class="container-fluid p-4">
+            <!-- Filter -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-body p-3">
+                    <form method="GET" class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Filter by Result</label>
+                            <select name="result" class="form-select form-select-sm">
+                                <option value="">All Results</option>
+                                <option value="fmd" {% if result_filter == 'fmd' %}selected{% endif %}>FMD Detected</option>
+                                <option value="healthy" {% if result_filter == 'healthy' %}selected{% endif %}>Healthy</option>
+                                <option value="not_cow" {% if result_filter == 'not_cow' %}selected{% endif %}>Not a Cow</option>
+                            </select>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button type="submit" class="btn btn-sm fw-semibold" style="background:linear-gradient(90deg,#064E3B,#10B981);color:white;border:none;">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                            <a href="{% url 'vet_uploads' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Download buttons -->
+            <div class="d-flex gap-2 mb-3 flex-wrap">
+                <a href="{% url 'vet_generate_report' 'daily' %}" class="btn btn-sm" style="background:#DCFCE7;color:#16A34A;border:none;font-size:12px;">
+                    <i class="fas fa-download me-1"></i>Daily PDF
+                </a>
+                <a href="{% url 'vet_generate_report' 'weekly' %}" class="btn btn-sm" style="background:#DCFCE7;color:#16A34A;border:none;font-size:12px;">
+                    <i class="fas fa-download me-1"></i>Weekly PDF
+                </a>
+                <a href="{% url 'vet_generate_report' 'monthly' %}" class="btn btn-sm" style="background:#DCFCE7;color:#16A34A;border:none;font-size:12px;">
+                    <i class="fas fa-download me-1"></i>Monthly PDF
+                </a>
+                <a href="{% url 'vet_generate_report' 'all' %}" class="btn btn-sm" style="background:#FEF3C7;color:#D97706;border:none;font-size:12px;">
+                    <i class="fas fa-download me-1"></i>All-Time PDF
+                </a>
+            </div>
+
+            <!-- Table -->
+            <div class="card border-0 shadow-sm" style="border-radius:14px;">
+                <div class="card-header bg-white py-3 px-4" style="border-radius:14px 14px 0 0;">
+                    <h6 class="fw-bold mb-0" style="color:#064E3B;">Detection Records ({{ detections|length }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if detections %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" style="font-size:13px;">
+                            <thead style="background:#F0FDF4;">
+                                <tr>
+                                    <th class="px-4 py-3">Image</th>
+                                    <th>Uploaded By</th>
+                                    <th>Date</th>
+                                    <th>Animal ID</th>
+                                    <th>Result</th>
+                                    <th>Confidence</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in detections %}
+                                <tr {% if d.result == 'fmd' %}style="background:#FFF5F5;"{% endif %}>
+                                    <td class="px-4 py-2">
+                                        {% if d.image %}
+                                        <img src="{{ d.image.url }}" alt="Cattle" style="width:52px;height:42px;object-fit:cover;border-radius:6px;">
+                                        {% else %}
+                                        <div style="width:52px;height:42px;background:#F0FDF4;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold">{{ d.user.get_full_name|default:d.user.email }}</div>
+                                        <small class="text-muted">{{ d.user.email }}</small>
+                                    </td>
+                                    <td class="py-2">{{ d.uploaded_at|date:"M d, Y H:i" }}</td>
+                                    <td class="py-2">{{ d.animal_id|default:"—" }}</td>
+                                    <td class="py-2">
+                                        {% if d.result == 'fmd' %}
+                                            <span class="badge" style="background:#FEE2E2;color:#DC2626;font-size:11px;">⚠️ FMD Detected</span>
+                                        {% elif d.result == 'healthy' %}
+                                            <span class="badge" style="background:#DCFCE7;color:#16A34A;font-size:11px;">✓ Healthy</span>
+                                        {% elif d.result == 'not_cow' %}
+                                            <span class="badge" style="background:#FEF3C7;color:#D97706;font-size:11px;">Not a Cow</span>
+                                        {% else %}
+                                            <span class="badge" style="background:#F1F5F9;color:#64748B;font-size:11px;">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-2">
+                                        {% if d.confidence_score %}
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <div class="progress" style="height:5px;width:50px;">
+                                                <div class="progress-bar {% if d.confidence_score >= 80 %}bg-success{% elif d.confidence_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                    style="width:{{ d.confidence_score }}%;"></div>
+                                            </div>
+                                            <small>{{ d.confidence_score|floatformat:0 }}%</small>
+                                        </div>
+                                        {% else %}—{% endif %}
+                                    </td>
+                                    <td class="py-2">
+                                        <a href="{% url 'vet_detection_detail' d.id %}" class="btn btn-sm" style="background:#DCFCE7;color:#16A34A;border:none;font-size:11px;padding:4px 10px;">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No detections found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

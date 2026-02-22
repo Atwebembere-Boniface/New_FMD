@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    {% include 'partials/admin_sidebar.html' %}
+
+    <div class="main-content" style="margin-left: 260px; width: calc(100% - 260px); background: #F1F5F9; min-height: 100vh;">
+        <div class="bg-white border-bottom px-4 py-3">
+            <h4 class="mb-0 fw-bold" style="color: #1E3A8A;">Notifications</h4>
+            <small class="text-muted">Email alerts for new uploads and FMD detections</small>
+        </div>
+
+        <div class="container-fluid p-4">
+            {% if notifications %}
+            <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                <div class="card-body p-0">
+                    {% for notif in notifications %}
+                    <div class="d-flex align-items-start p-4 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:#F1F5F9 !important;">
+                        <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                            background:{% if notif.notification_type == 'fmd_alert' %}#FEE2E2{% elif notif.notification_type == 'analysis_done' %}#DCFCE7{% else %}#EEF2FF{% endif %};">
+                            <i class="fas {% if notif.notification_type == 'fmd_alert' %}fa-exclamation-triangle{% elif notif.notification_type == 'analysis_done' %}fa-check-circle{% else %}fa-upload{% endif %}"
+                               style="color:{% if notif.notification_type == 'fmd_alert' %}#DC2626{% elif notif.notification_type == 'analysis_done' %}#16A34A{% else %}#1E3A8A{% endif %};font-size:18px;"></i>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="mb-1 fw-semibold" style="color:#1E293B;font-size:14px;">{{ notif.title }}</h6>
+                                <small class="text-muted ms-2" style="font-size:11px;white-space:nowrap;">{{ notif.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1 text-muted" style="font-size:13px;">{{ notif.message }}</p>
+                            {% if notif.detection %}
+                            <div class="mt-1">
+                                <span class="badge" style="background:#F1F5F9;color:#64748B;font-size:10px;">
+                                    Uploaded by: {{ notif.detection.user.get_full_name|default:notif.detection.user.email }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Notifications Yet</h5>
+                    <p class="text-muted">You'll be notified here (and via email) whenever a detection is made.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

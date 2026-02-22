@@ -4,102 +4,72 @@
 <div class="auth-wrapper d-flex align-items-center justify-content-center py-5">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-7">
+            <div class="col-md-6">
                 <div class="card auth-card shadow-lg border-0 rounded-4">
                     <div class="card-body p-5">
-                        <!-- Logo and Title -->
                         <div class="text-center mb-4">
-                            <div class="mb-3">
-                                <i class="fas fa-cow fa-3x" style="color: #FB923C;"></i>
-                            </div>
-                            <h3 class="fw-bold mb-2" style="color: #FB923C !important;">Create Your Account</h3>
-                            <p class="text-muted">Join the FMD Early Detection System</p>
+                            <i class="fas fa-cow fa-3x mb-2" style="color: #FB923C;"></i>
+                            <h3 class="fw-bold mb-1" style="color: #FB923C !important;">Create Your Account</h3>
+                            <p class="text-muted" style="font-size:13px;">Join the FMD Early Detection System — Simba Farms</p>
                         </div>
 
-                        <!-- Registration Form -->
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+
                         <form method="POST" novalidate>
                             {% csrf_token %}
-                            
-                            <div class="row">
-                                <!-- First Name -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.first_name.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">First Name</label>
-                                    {{ form.first_name }}
-                                    {% if form.first_name.errors %}
-                                        <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
 
-                                <!-- Last Name -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.last_name.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Last Name</label>
-                                    {{ form.last_name }}
-                                    {% if form.last_name.errors %}
-                                        <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Username -->
+                            <!-- Full Name -->
                             <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Username</label>
-                                {{ form.username }}
-                                {% if form.username.errors %}
-                                    <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                                <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Full Name <span class="text-danger">*</span></label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
                             <!-- Email -->
                             <div class="mb-3">
-                                <label for="{{ form.email.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Email Address</label>
+                                <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Email Address <span class="text-danger">*</span></label>
                                 {{ form.email }}
                                 {% if form.email.errors %}
                                     <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
-                            <div class="row">
-                                <!-- Farm Name -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.farm_name.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Farm Name</label>
-                                    {{ form.farm_name }}
-                                    {% if form.farm_name.errors %}
-                                        <div class="text-danger small mt-1">{{ form.farm_name.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Location -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.location.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Location</label>
-                                    {{ form.location }}
-                                    {% if form.location.errors %}
-                                        <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
                             <!-- Phone Number -->
                             <div class="mb-3">
-                                <label for="{{ form.phone_number.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Phone Number (Optional)</label>
+                                <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Phone Number</label>
                                 {{ form.phone_number }}
-                                {% if form.phone_number.errors %}
-                                    <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
-                                {% endif %}
                             </div>
 
                             <div class="row">
-                                <!-- Password -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.password1.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Password</label>
+                                    <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Farm Name</label>
+                                    {{ form.farm_name }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Location</label>
+                                    {{ form.location }}
+                                </div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Password <span class="text-danger">*</span></label>
                                     {{ form.password1 }}
                                     {% if form.password1.errors %}
                                         <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
                                     {% endif %}
                                 </div>
-
-                                <!-- Confirm Password -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.password2.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Confirm Password</label>
+                                    <label class="form-label" style="color: #1E3A8A; font-weight: 600; font-size:13px;">Confirm Password <span class="text-danger">*</span></label>
                                     {{ form.password2 }}
                                     {% if form.password2.errors %}
                                         <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
@@ -107,16 +77,13 @@
                                 </div>
                             </div>
 
-                            <!-- Register Button -->
-                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold mt-3" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none;">
-                                Create Account
-                                <i class="fas fa-user-plus ms-2"></i>
+                            <button type="submit" class="btn w-100 py-3 rounded-3 fw-semibold mt-2" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none; color:white;">
+                                Create Account <i class="fas fa-user-plus ms-2"></i>
                             </button>
                         </form>
 
-                        <!-- Login Link -->
                         <div class="text-center mt-4">
-                            <p class="mb-0">Already have an account? 
+                            <p class="mb-0" style="font-size:13px;">Already have an account?
                                 <a href="{% url 'login' %}" class="fw-semibold text-decoration-none" style="color: #FB923C;">Login here</a>
                             </p>
                         </div>
@@ -128,16 +95,12 @@
 </div>
 
 <style>
-    .auth-wrapper {
-        min-height: 100vh;
-        background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
-                    url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
-        background-attachment: fixed;
-    }
-    
-    .auth-card {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(10px);
-    }
+.auth-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
+                url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
+    background-attachment: fixed;
+}
+.auth-card { background: rgba(255, 255, 255, 0.98); }
 </style>
 {% endblock %}

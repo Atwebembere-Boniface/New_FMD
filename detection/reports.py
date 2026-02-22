@@ -1,16 +1,16 @@
 """
 Report generation service for FMD Detection System
+Includes: ReportGenerator (farmer), AdminReportGenerator, VetReportGenerator
 """
 from django.utils import timezone
 from django.db.models import Count, Q
-from datetime import timedelta, datetime
-from reportlab.lib.pagesizes import letter, A4
+from datetime import timedelta
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.platypus import Image as RLImage
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from io import BytesIO
 import logging
 
@@ -19,266 +19,337 @@ from .models import Detection, UserProfile
 logger = logging.getLogger(__name__)
 
 
-class ReportGenerator:
-    """Generate PDF reports for FMD detections"""
-    
-    def __init__(self, user, report_type='daily'):
-        self.user = user
-        self.report_type = report_type
+class BaseReportGenerator:
+    def __init__(self):
         self.buffer = BytesIO()
         self.styles = getSampleStyleSheet()
-        self.setup_custom_styles()
-        
-    def setup_custom_styles(self):
-        """Setup custom paragraph styles"""
+        self._setup_styles()
+
+    def _setup_styles(self):
         self.styles.add(ParagraphStyle(
-            name='CustomTitle',
-            parent=self.styles['Heading1'],
-            fontSize=24,
-            textColor=colors.HexColor('#2196F3'),
-            spaceAfter=30,
-            alignment=TA_CENTER,
-            fontName='Helvetica-Bold'
+            name='ReportTitle', parent=self.styles['Heading1'],
+            fontSize=22, textColor=colors.HexColor('#1E3A8A'),
+            spaceAfter=20, alignment=TA_CENTER, fontName='Helvetica-Bold'
         ))
-        
         self.styles.add(ParagraphStyle(
-            name='CustomHeading',
-            parent=self.styles['Heading2'],
-            fontSize=16,
-            textColor=colors.HexColor('#1565C0'),
-            spaceAfter=12,
-            fontName='Helvetica-Bold'
+            name='ReportSubtitle', parent=self.styles['Normal'],
+            fontSize=12, textColor=colors.HexColor('#FB923C'),
+            spaceAfter=6, alignment=TA_CENTER
         ))
-        
         self.styles.add(ParagraphStyle(
-            name='CustomBody',
-            parent=self.styles['Normal'],
-            fontSize=11,
-            spaceAfter=12,
+            name='SectionHeading', parent=self.styles['Heading2'],
+            fontSize=14, textColor=colors.HexColor('#1E3A8A'),
+            spaceAfter=10, fontName='Helvetica-Bold'
         ))
-    
-    def get_date_range(self):
-        """Get date range based on report type"""
-        now = timezone.now()
-        
-        if self.report_type == 'daily':
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            end_date = now
-            title = f"Daily Report - {now.strftime('%B %d, %Y')}"
-        elif self.report_type == 'weekly':
-            start_date = now - timedelta(days=7)
-            end_date = now
-            title = f"Weekly Report - {start_date.strftime('%b %d')} to {end_date.strftime('%b %d, %Y')}"
-        elif self.report_type == 'monthly':
-            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            end_date = now
-            title = f"Monthly Report - {now.strftime('%B %Y')}"
-        else:
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            end_date = now
-            title = "Report"
-        
-        return start_date, end_date, title
-    
-    def get_report_data(self, start_date, end_date):
-        """Fetch detection data for the date range"""
-        detections = Detection.objects.filter(
-            user=self.user,
-            uploaded_at__range=[start_date, end_date]
-        ).order_by('-uploaded_at')
-        
-        # Calculate statistics
-        total_scans = detections.count()
-        fmd_detected = detections.filter(result='fmd').count()
-        healthy_cattle = detections.filter(result='healthy').count()
-        not_cow = detections.filter(result='not_cow').count()
-        inconclusive = detections.filter(result='inconclusive').count()
-        
-        # Calculate average confidence
-        completed = detections.filter(status='completed', confidence_score__isnull=False)
-        avg_confidence = 0
-        if completed.exists():
-            avg_confidence = sum(d.confidence_score for d in completed) / completed.count()
-        
-        return {
-            'detections': detections,
-            'total_scans': total_scans,
-            'fmd_detected': fmd_detected,
-            'healthy_cattle': healthy_cattle,
-            'not_cow': not_cow,
-            'inconclusive': inconclusive,
-            'avg_confidence': avg_confidence,
-            'fmd_percentage': (fmd_detected / total_scans * 100) if total_scans > 0 else 0,
-            'healthy_percentage': (healthy_cattle / total_scans * 100) if total_scans > 0 else 0,
-        }
-    
-    def generate(self):
-        """Generate the complete PDF report"""
-        doc = SimpleDocTemplate(
-            self.buffer,
-            pagesize=A4,
-            rightMargin=72,
-            leftMargin=72,
-            topMargin=72,
-            bottomMargin=18,
-        )
-        
-        # Container for the 'Flowable' objects
-        elements = []
-        
-        # Get date range and data
-        start_date, end_date, title = self.get_date_range()
-        data = self.get_report_data(start_date, end_date)
-        
-        # Header
-        elements.append(Paragraph("FMD Early Detection System", self.styles['CustomTitle']))
-        elements.append(Paragraph("Simba Farms, Ibanda District", self.styles['CustomBody']))
-        elements.append(Spacer(1, 12))
-        elements.append(Paragraph(title, self.styles['CustomHeading']))
-        elements.append(Spacer(1, 12))
-        
-        # User Information
-        try:
-            profile = self.user.profile
-            user_info = f"""
-            <b>Report Generated For:</b> {self.user.get_full_name()}<br/>
-            <b>Farm:</b> {profile.farm_name}<br/>
-            <b>Location:</b> {profile.location}<br/>
-            <b>Generated On:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')}
-            """
-        except:
-            user_info = f"""
-            <b>Report Generated For:</b> {self.user.username}<br/>
-            <b>Generated On:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')}
-            """
-        
-        elements.append(Paragraph(user_info, self.styles['CustomBody']))
-        elements.append(Spacer(1, 20))
-        
-        # Summary Statistics
-        elements.append(Paragraph("Summary Statistics", self.styles['CustomHeading']))
-        
+        self.styles.add(ParagraphStyle(
+            name='BodyText2', parent=self.styles['Normal'],
+            fontSize=10, spaceAfter=8,
+        ))
+
+    def _build_summary_table(self, data):
         summary_data = [
             ['Metric', 'Count', 'Percentage'],
             ['Total Scans', str(data['total_scans']), '100%'],
             ['FMD Detected', str(data['fmd_detected']), f"{data['fmd_percentage']:.1f}%"],
             ['Healthy Cattle', str(data['healthy_cattle']), f"{data['healthy_percentage']:.1f}%"],
-            ['Not a Cow', str(data['not_cow']), f"{(data['not_cow']/data['total_scans']*100) if data['total_scans'] > 0 else 0:.1f}%"],
-            ['Inconclusive', str(data['inconclusive']), f"{(data['inconclusive']/data['total_scans']*100) if data['total_scans'] > 0 else 0:.1f}%"],
-            ['Average Confidence', f"{data['avg_confidence']:.2f}%", '-'],
+            ['Not a Cow', str(data['not_cow']),
+             f"{(data['not_cow'] / data['total_scans'] * 100) if data['total_scans'] > 0 else 0:.1f}%"],
+            ['Average Confidence', f"{data['avg_confidence']:.1f}%", '-'],
         ]
-        
-        summary_table = Table(summary_data, colWidths=[3*inch, 1.5*inch, 1.5*inch])
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2196F3')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        t = Table(summary_data, colWidths=[3 * inch, 1.5 * inch, 1.5 * inch])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E3A8A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F0F4FF')]),
         ]))
-        
-        elements.append(summary_table)
-        elements.append(Spacer(1, 20))
-        
-        # Alerts Section
-        if data['fmd_detected'] > 0:
-            elements.append(Paragraph("⚠️ CRITICAL ALERTS", self.styles['CustomHeading']))
-            alert_text = f"""
-            <font color="red"><b>{data['fmd_detected']} case(s) of FMD detected during this period!</b></font><br/>
-            <b>Immediate Action Required:</b><br/>
-            • Isolate affected animals immediately<br/>
-            • Contact veterinary officer<br/>
-            • Implement biosecurity measures<br/>
-            • Monitor other animals closely
-            """
-            elements.append(Paragraph(alert_text, self.styles['CustomBody']))
-            elements.append(Spacer(1, 20))
-        
-        # Detailed Detection Records
-        if data['detections'].exists():
-            elements.append(Paragraph("Detailed Detection Records", self.styles['CustomHeading']))
-            
-            detection_data = [['Date', 'Animal ID', 'Result', 'Confidence', 'Status']]
-            
-            for detection in data['detections']:
-                detection_data.append([
-                    detection.uploaded_at.strftime('%Y-%m-%d %H:%M'),
-                    detection.animal_id or 'N/A',
-                    detection.get_result_display() if detection.result else 'Pending',
-                    f"{detection.confidence_score:.1f}%" if detection.confidence_score else 'N/A',
-                    detection.get_status_display(),
-                ])
-            
-            detection_table = Table(detection_data, colWidths=[1.8*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1*inch])
-            detection_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-            ]))
-            
-            elements.append(detection_table)
+        return t
+
+    def _build_detection_table(self, detections, include_user=False):
+        if include_user:
+            headers = ['Date', 'User', 'Animal ID', 'Result', 'Confidence', 'Status']
+            col_widths = [1.5 * inch, 1.2 * inch, 1 * inch, 1 * inch, 1 * inch, 0.9 * inch]
         else:
-            elements.append(Paragraph("No detection records found for this period.", self.styles['CustomBody']))
-        
+            headers = ['Date', 'Animal ID', 'Result', 'Confidence', 'Status']
+            col_widths = [1.8 * inch, 1.2 * inch, 1.2 * inch, 1.2 * inch, 1.1 * inch]
+
+        rows = [headers]
+        for d in detections:
+            row = [d.uploaded_at.strftime('%Y-%m-%d %H:%M')]
+            if include_user:
+                row.append(d.user.get_full_name() or d.user.username)
+            row += [
+                d.animal_id or 'N/A',
+                d.get_result_display() if d.result else 'Pending',
+                f"{d.confidence_score:.1f}%" if d.confidence_score else 'N/A',
+                d.get_status_display(),
+            ]
+            rows.append(row)
+
+        t = Table(rows, colWidths=col_widths)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FB923C')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('GRID', (0, 0), (-1, -1), 0.4, colors.grey),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FFF8F0')]),
+        ]))
+        return t
+
+    def _get_date_range_for_type(self, report_type):
+        now = timezone.now()
+        if report_type == 'daily':
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            title = f"Daily Report - {now.strftime('%B %d, %Y')}"
+        elif report_type == 'weekly':
+            start = now - timedelta(days=7)
+            title = f"Weekly Report - {start.strftime('%b %d')} to {now.strftime('%b %d, %Y')}"
+        elif report_type == 'monthly':
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            title = f"Monthly Report - {now.strftime('%B %Y')}"
+        else:
+            start = now - timedelta(days=365 * 10)
+            title = "All-Time Report"
+        return start, now, title
+
+    def _calc_stats(self, detections):
+        total = detections.count()
+        fmd = detections.filter(result='fmd').count()
+        healthy = detections.filter(result='healthy').count()
+        not_cow = detections.filter(result='not_cow').count()
+        completed = detections.filter(status='completed', confidence_score__isnull=False)
+        avg_conf = sum(d.confidence_score for d in completed) / completed.count() if completed.exists() else 0
+        return {
+            'detections': detections,
+            'total_scans': total,
+            'fmd_detected': fmd,
+            'healthy_cattle': healthy,
+            'not_cow': not_cow,
+            'avg_confidence': avg_conf,
+            'fmd_percentage': (fmd / total * 100) if total > 0 else 0,
+            'healthy_percentage': (healthy / total * 100) if total > 0 else 0,
+        }
+
+    def _footer_text(self):
+        return Paragraph(
+            '<i>Generated by FMD Early Detection System · Simba Farms, Ibanda District · support@simbafarmsdetection.com</i>',
+            self.styles['BodyText2']
+        )
+
+
+class ReportGenerator(BaseReportGenerator):
+    """Farmer report generator"""
+
+    def __init__(self, user, report_type='daily'):
+        super().__init__()
+        self.user = user
+        self.report_type = report_type
+
+    def get_date_range(self):
+        return self._get_date_range_for_type(self.report_type)
+
+    def get_report_data(self, start_date, end_date):
+        detections = Detection.objects.filter(
+            user=self.user, uploaded_at__range=[start_date, end_date]
+        ).order_by('-uploaded_at')
+        return self._calc_stats(detections)
+
+    def generate(self):
+        doc = SimpleDocTemplate(self.buffer, pagesize=A4,
+                                rightMargin=60, leftMargin=60, topMargin=60, bottomMargin=40)
+        elements = []
+        start_date, end_date, title = self.get_date_range()
+        data = self.get_report_data(start_date, end_date)
+
+        elements.append(Paragraph("FMD Early Detection System", self.styles['ReportTitle']))
+        elements.append(Paragraph("Simba Farms, Ibanda District", self.styles['ReportSubtitle']))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(title, self.styles['SectionHeading']))
+        elements.append(Paragraph(
+            f"<b>Generated For:</b> {self.user.get_full_name() or self.user.email} &nbsp;|&nbsp; "
+            f"<b>Generated On:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')}",
+            self.styles['BodyText2']
+        ))
+        elements.append(Spacer(1, 15))
+        elements.append(Paragraph("Summary Statistics", self.styles['SectionHeading']))
+        elements.append(self._build_summary_table(data))
+        elements.append(Spacer(1, 15))
+
+        if data['fmd_detected'] > 0:
+            elements.append(Paragraph("⚠️ ALERT: FMD Cases Detected", self.styles['SectionHeading']))
+            elements.append(Paragraph(
+                f"<font color='red'><b>{data['fmd_detected']} FMD case(s) detected. Isolate animals and contact a veterinary officer immediately.</b></font>",
+                self.styles['BodyText2']
+            ))
+            elements.append(Spacer(1, 10))
+
+        if data['detections'].exists():
+            elements.append(Paragraph("Detection Records", self.styles['SectionHeading']))
+            elements.append(self._build_detection_table(data['detections']))
+        else:
+            elements.append(Paragraph("No detection records for this period.", self.styles['BodyText2']))
+
         elements.append(Spacer(1, 20))
-        
-        # Recommendations
-        elements.append(Paragraph("Recommendations", self.styles['CustomHeading']))
-        
-        recommendations = self._generate_recommendations(data)
-        elements.append(Paragraph(recommendations, self.styles['CustomBody']))
-        
-        # Footer
-        elements.append(Spacer(1, 30))
-        footer_text = """
-        <i>This report was automatically generated by the FMD Early Detection System.<br/>
-        For questions or support, contact: support@simbafarmsdetection.com</i>
-        """
-        elements.append(Paragraph(footer_text, self.styles['CustomBody']))
-        
-        # Build PDF
+        elements.append(self._footer_text())
         doc.build(elements)
-        
-        # Get the value of the BytesIO buffer and return it
         pdf = self.buffer.getvalue()
         self.buffer.close()
         return pdf
-    
-    def _generate_recommendations(self, data):
-        """Generate recommendations based on detection data"""
-        recommendations = []
-        
+
+
+class AdminReportGenerator(BaseReportGenerator):
+    """System-wide report for admin"""
+
+    def __init__(self, report_type='daily'):
+        super().__init__()
+        self.report_type = report_type
+
+    def generate(self):
+        doc = SimpleDocTemplate(self.buffer, pagesize=A4,
+                                rightMargin=60, leftMargin=60, topMargin=60, bottomMargin=40)
+        elements = []
+        start_date, end_date, title = self._get_date_range_for_type(self.report_type)
+
+        detections = Detection.objects.filter(
+            uploaded_at__range=[start_date, end_date]
+        ).select_related('user').order_by('-uploaded_at')
+        data = self._calc_stats(detections)
+
+        elements.append(Paragraph("FMD Early Detection System — Admin Report", self.styles['ReportTitle']))
+        elements.append(Paragraph("Simba Farms, Ibanda District", self.styles['ReportSubtitle']))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(title, self.styles['SectionHeading']))
+        elements.append(Paragraph(
+            f"<b>Generated On:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')} &nbsp;|&nbsp; <b>Scope:</b> All Users",
+            self.styles['BodyText2']
+        ))
+        elements.append(Spacer(1, 15))
+
+        # User summary
+        from django.contrib.auth.models import User
+        total_farmers = User.objects.filter(profile__role='farmer').count()
+        total_vets = User.objects.filter(profile__role='vet').count()
+        elements.append(Paragraph("System Overview", self.styles['SectionHeading']))
+        overview_data = [
+            ['Registered Farmers', str(total_farmers)],
+            ['Registered Vets', str(total_vets)],
+        ]
+        ov_table = Table(overview_data, colWidths=[3 * inch, 2 * inch])
+        ov_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E3A8A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.HexColor('#EEF2FF'), colors.white]),
+        ]))
+        elements.append(ov_table)
+        elements.append(Spacer(1, 15))
+
+        elements.append(Paragraph("Detection Summary", self.styles['SectionHeading']))
+        elements.append(self._build_summary_table(data))
+        elements.append(Spacer(1, 15))
+
         if data['fmd_detected'] > 0:
-            recommendations.append("• <b>URGENT:</b> FMD cases detected. Implement immediate quarantine and contact veterinary services.")
-        
-        if data['fmd_percentage'] > 10:
-            recommendations.append("• High FMD detection rate. Consider mass screening of the entire herd.")
-        
-        if data['total_scans'] < 5 and self.report_type == 'daily':
-            recommendations.append("• Consider increasing monitoring frequency for early detection.")
-        
-        if data['avg_confidence'] < 70 and data['avg_confidence'] > 0:
-            recommendations.append("• Average confidence is below 70%. Ensure images are clear and well-lit for better accuracy.")
-        
-        if data['healthy_cattle'] == data['total_scans']:
-            recommendations.append("• ✓ All scanned cattle appear healthy. Continue regular monitoring and good farm hygiene practices.")
-        
-        if not recommendations:
-            recommendations.append("• Continue regular monitoring and maintain good biosecurity practices.")
-            recommendations.append("• Ensure all cattle are regularly checked for symptoms.")
-            recommendations.append("• Keep records updated for trend analysis.")
-        
-        return '<br/>'.join(recommendations)
+            elements.append(Paragraph("⚠️ FMD Alerts", self.styles['SectionHeading']))
+            elements.append(Paragraph(
+                f"<font color='red'><b>{data['fmd_detected']} FMD case(s) detected system-wide. Immediate veterinary review required.</b></font>",
+                self.styles['BodyText2']
+            ))
+            elements.append(Spacer(1, 10))
+
+        if data['detections'].exists():
+            elements.append(Paragraph("All Detection Records", self.styles['SectionHeading']))
+            elements.append(self._build_detection_table(data['detections'], include_user=True))
+        else:
+            elements.append(Paragraph("No detections recorded for this period.", self.styles['BodyText2']))
+
+        elements.append(Spacer(1, 20))
+        elements.append(self._footer_text())
+        doc.build(elements)
+        pdf = self.buffer.getvalue()
+        self.buffer.close()
+        return pdf
+
+
+class VetReportGenerator(BaseReportGenerator):
+    """Vet report: includes both vet's own detections and all farm detections"""
+
+    def __init__(self, vet_user, report_type='daily'):
+        super().__init__()
+        self.vet_user = vet_user
+        self.report_type = report_type
+
+    def get_date_range(self):
+        return self._get_date_range_for_type(self.report_type)
+
+    def get_report_data(self, start_date, end_date):
+        detections = Detection.objects.filter(
+            uploaded_at__range=[start_date, end_date]
+        ).select_related('user').order_by('-uploaded_at')
+        return self._calc_stats(detections)
+
+    def generate(self):
+        doc = SimpleDocTemplate(self.buffer, pagesize=A4,
+                                rightMargin=60, leftMargin=60, topMargin=60, bottomMargin=40)
+        elements = []
+        start_date, end_date, title = self.get_date_range()
+        data = self.get_report_data(start_date, end_date)
+
+        # Vet's own detections
+        vet_detections = Detection.objects.filter(
+            user=self.vet_user, uploaded_at__range=[start_date, end_date]
+        ).order_by('-uploaded_at')
+        vet_data = self._calc_stats(vet_detections)
+
+        elements.append(Paragraph("FMD Early Detection System — Veterinary Report", self.styles['ReportTitle']))
+        elements.append(Paragraph("Simba Farms, Ibanda District", self.styles['ReportSubtitle']))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(title, self.styles['SectionHeading']))
+        elements.append(Paragraph(
+            f"<b>Veterinarian:</b> Dr. {self.vet_user.get_full_name()} &nbsp;|&nbsp; "
+            f"<b>Generated:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')}",
+            self.styles['BodyText2']
+        ))
+        elements.append(Spacer(1, 15))
+
+        elements.append(Paragraph("Farm-Wide Summary (All Uploads)", self.styles['SectionHeading']))
+        elements.append(self._build_summary_table(data))
+        elements.append(Spacer(1, 15))
+
+        elements.append(Paragraph("My Detections Summary", self.styles['SectionHeading']))
+        elements.append(self._build_summary_table(vet_data))
+        elements.append(Spacer(1, 15))
+
+        if data['fmd_detected'] > 0:
+            elements.append(Paragraph("⚠️ FMD Alerts — Farm-Wide", self.styles['SectionHeading']))
+            elements.append(Paragraph(
+                f"<font color='red'><b>{data['fmd_detected']} FMD case(s) detected on the farm. Immediate action required.</b></font>",
+                self.styles['BodyText2']
+            ))
+            elements.append(Spacer(1, 10))
+
+        if data['detections'].exists():
+            elements.append(Paragraph("All Farm Detection Records", self.styles['SectionHeading']))
+            elements.append(self._build_detection_table(data['detections'], include_user=True))
+        else:
+            elements.append(Paragraph("No detections for this period.", self.styles['BodyText2']))
+
+        elements.append(Spacer(1, 20))
+        elements.append(self._footer_text())
+        doc.build(elements)
+        pdf = self.buffer.getvalue()
+        self.buffer.close()
+        return pdf

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+    {% include 'partials/vet_sidebar.html' %}
+
+    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px); background: #F0FDF4; min-height: 100vh;">
+        <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+            <a href="{% url 'vet_uploads' %}" class="btn btn-sm me-3" style="background:#DCFCE7;color:#16A34A;border:none;">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="mb-0 fw-bold" style="color: #064E3B;">Detection Details</h4>
+                <small class="text-muted">ID: {{ detection.id }}</small>
+            </div>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div class="row g-4">
+                <!-- Image -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+                        <div class="card-header bg-white py-3 px-4" style="border-radius:16px 16px 0 0;border-bottom:1px solid #F0FDF4;">
+                            <h6 class="fw-bold mb-0" style="color:#064E3B;">Uploaded Image</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <img src="{{ detection.image.url }}" alt="Cattle" class="img-fluid rounded-3 w-100" style="max-height:380px;object-fit:contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+                        <div class="card-header bg-white py-3 px-4" style="border-radius:16px 16px 0 0;border-bottom:1px solid #F0FDF4;">
+                            <h6 class="fw-bold mb-0" style="color:#064E3B;">Analysis Results</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Uploader info -->
+                            <div class="p-3 rounded-3 mb-4" style="background:#F0FDF4;">
+                                <label class="text-muted small d-block mb-1">Uploaded By</label>
+                                <div class="fw-semibold">{{ detection.user.get_full_name|default:detection.user.email }}</div>
+                                <small class="text-muted">{{ detection.user.email }}</small>
+                            </div>
+
+                            <!-- Result -->
+                            <div class="mb-4">
+                                <label class="text-muted small mb-2 d-block">Detection Result</label>
+                                {% if detection.result == 'fmd' %}
+                                    <span class="badge fs-6 px-4 py-2" style="background:#FEE2E2;color:#DC2626;">⚠️ FMD Detected</span>
+                                {% elif detection.result == 'healthy' %}
+                                    <span class="badge fs-6 px-4 py-2" style="background:#DCFCE7;color:#16A34A;">✓ Healthy</span>
+                                {% elif detection.result == 'not_cow' %}
+                                    <span class="badge fs-6 px-4 py-2" style="background:#FEF3C7;color:#D97706;">Not a Cow</span>
+                                {% else %}
+                                    <span class="badge fs-6 px-4 py-2 bg-secondary">Pending</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Confidence -->
+                            {% if detection.confidence_score %}
+                            <div class="mb-4">
+                                <label class="text-muted small mb-2 d-block">Confidence Score</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-3" style="height:22px;border-radius:8px;">
+                                        <div class="progress-bar {% if detection.confidence_score >= 80 %}bg-success{% elif detection.confidence_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                                            role="progressbar" style="width:{{ detection.confidence_score }}%;border-radius:8px;">
+                                            {{ detection.confidence_score|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <hr>
+                            <div class="row g-2" style="font-size:13px;">
+                                <div class="col-6">
+                                    <label class="text-muted small">Animal ID</label>
+                                    <div class="fw-semibold">{{ detection.animal_id|default:"N/A" }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Location</label>
+                                    <div class="fw-semibold">{{ detection.location|default:"N/A" }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Uploaded</label>
+                                    <div class="fw-semibold">{{ detection.uploaded_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Analyzed</label>
+                                    <div class="fw-semibold">{{ detection.analyzed_at|date:"M d, Y H:i"|default:"—" }}</div>
+                                </div>
+                            </div>
+
+                            {% if detection.notes %}
+                            <div class="mt-3 p-3 rounded-3" style="background:#F8FAFC;font-size:13px;">
+                                <label class="text-muted small d-block mb-1">Notes</label>
+                                {{ detection.notes }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vet Recommendation -->
+                <div class="col-12">
+                    {% if detection.result == 'fmd' %}
+                    <div class="alert border-0 shadow-sm" style="background:linear-gradient(90deg,#FEF2F2,#FEE2E2);border-left:5px solid #DC2626 !important;border-radius:14px;">
+                        <h5 class="alert-heading" style="color:#DC2626;"><i class="fas fa-exclamation-triangle me-2"></i>FMD Detected — Immediate Action Required</h5>
+                        <hr>
+                        <ul class="mb-0" style="color:#7F1D1D;font-size:14px;">
+                            <li>Immediately isolate the affected animal from the herd</li>
+                            <li>Implement biosecurity measures and restrict farm access</li>
+                            <li>Notify the farm owner and coordinate a full herd inspection</li>
+                            <li>Report to the district veterinary officer as per regulations</li>
+                            <li>Monitor all animals daily for the next 14 days</li>
+                        </ul>
+                    </div>
+                    {% elif detection.result == 'healthy' %}
+                    <div class="alert border-0 shadow-sm" style="background:linear-gradient(90deg,#F0FDF4,#DCFCE7);border-left:5px solid #16A34A !important;border-radius:14px;">
+                        <h5 style="color:#16A34A;"><i class="fas fa-check-circle me-2"></i>Animal Appears Healthy</h5>
+                        <p class="mb-0" style="color:#166534;font-size:14px;">No signs of FMD detected. Continue regular monitoring and maintain good farm hygiene practices.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
