@@ -1,20 +1,16 @@
-<!-- Mobile Menu Toggle Button -->
 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
     <i class="fas fa-bars fa-lg"></i>
 </button>
 
-<!-- Sidebar Overlay for Mobile -->
 <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
 
-<div class="sidebar bg-primary text-white vh-100 position-fixed" style="width: 250px; left: 0; top: 0;">
-    <!-- Logo Section -->
+<div class="sidebar bg-primary text-white vh-100 position-fixed" style="width: 250px; left: 0; top: 0; z-index: 1000;">
     <div class="p-4 text-center border-bottom border-light">
         <i class="fas fa-cow fa-3x mb-2" style="color: #FB923C;"></i>
         <h5 class="mb-0 fw-bold" style="color: white !important;">FMD Detection</h5>
-        <small class="text-light">Simba Farms</small>
+        <small class="text-light">{{ request.user.profile.farm_name|default:"Simba Farms" }}</small>
     </div>
 
-    <!-- Navigation Menu -->
     <nav class="mt-4">
         <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
             <i class="fas fa-th-large me-3"></i>
@@ -24,6 +20,29 @@
             <i class="fas fa-cloud-upload-alt me-3"></i>
             Upload Image
         </a>
+        
+        <a href="{% url 'farmer_inbox' %}" class="sidebar-link {% if 'inbox' in request.resolver_match.url_name or 'conversation' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-comments me-3"></i>
+            Consult Vet
+            {% with unread_count=request.user.unread_message_count %}
+                {% if unread_count > 0 %}
+                    <span class="badge rounded-pill bg-warning text-dark ms-auto" style="font-size: 10px;">{{ unread_count }}</span>
+                {% endif %}
+            {% endwith %}
+        </a>
+
+        <a href="{% url 'farmer_appointments' %}" class="sidebar-link {% if request.resolver_match.url_name == 'farmer_appointments' %}active{% endif %}">
+            <i class="fas fa-calendar-check me-3"></i>
+            Appointments
+        </a>
+
+        <a href="{% url 'vaccination_list' %}" class="sidebar-link {% if 'vaccination' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-syringe me-3"></i>
+            Vaccinations
+        </a>
+
+        <hr class="mx-3 my-2" style="opacity: 0.2;">
+
         <a href="{% url 'history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
             <i class="fas fa-history me-3"></i>
             History
@@ -38,7 +57,6 @@
         </a>
     </nav>
 
-    <!-- Logout Button -->
     <div class="position-absolute bottom-0 w-100 p-4">
         <a href="{% url 'logout' %}" class="btn w-100" style="background-color: #FB923C; color: white; border: none;">
             <i class="fas fa-sign-out-alt me-2"></i>
@@ -50,15 +68,18 @@
 <style>
     .sidebar {
         background: linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%) !important;
+        overflow-y: auto; /* Allows scrolling if many menu items added */
     }
     
     .sidebar-link {
-        display: block;
-        padding: 15px 25px;
+        display: flex;
+        align-items: center;
+        padding: 12px 25px;
         color: white;
         text-decoration: none;
         transition: all 0.3s ease;
         border-left: 4px solid transparent;
+        font-size: 14px;
     }
     
     .sidebar-link:hover {
@@ -71,5 +92,9 @@
         background-color: rgba(251, 146, 60, 0.3);
         border-left-color: #FB923C;
         font-weight: 600;
+    }
+
+    .ms-auto {
+        margin-left: auto !important;
     }
 </style>

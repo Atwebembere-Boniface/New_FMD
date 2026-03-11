@@ -1,151 +1,218 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="d-flex">
-    <!-- Sidebar -->
-    {% include 'partials/sidebar.html' %}
+  {% include 'partials/sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
 
-    <!-- Main Content -->
-    <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
-        <!-- Top Header -->
-        <div class="bg-white border-bottom p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-1 fw-bold">Detection Details</h4>
-                    <p class="text-muted mb-0">ID: {{ detection.id }}</p>
-                </div>
-                <a href="{% url 'history' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to History
-                </a>
-            </div>
-        </div>
-
-        <!-- Content -->
-        <div class="container-fluid p-4">
-            <div class="row g-4">
-                <!-- Image Preview -->
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h5 class="mb-0 fw-bold">Uploaded Image</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <img src="{{ detection.image.url }}" alt="Cattle Image" class="img-fluid rounded-3 w-100">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Detection Information -->
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h5 class="mb-0 fw-bold">Analysis Results</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <!-- Status -->
-                            <div class="mb-4">
-                                <label class="text-muted small mb-2">Status</label>
-                                <div>
-                                    <span class="badge fs-6 
-                                        {% if detection.status == 'completed' %}bg-success
-                                        {% elif detection.status == 'analyzing' %}bg-info
-                                        {% elif detection.status == 'failed' %}bg-danger
-                                        {% else %}bg-secondary{% endif %} px-4 py-2">
-                                        {{ detection.get_status_display }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Result -->
-                            <div class="mb-4">
-                                <label class="text-muted small mb-2">Result</label>
-                                <div>
-                                    {% if detection.result %}
-                                        <span class="badge fs-6
-                                            {% if detection.result == 'healthy' %}bg-success
-                                            {% elif detection.result == 'fmd' %}bg-danger
-                                            {% elif detection.result == 'not_cow' %}bg-warning
-                                            {% else %}bg-secondary{% endif %} px-4 py-2">
-                                            {{ detection.get_result_display }}
-                                        </span>
-                                    {% else %}
-                                        <span class="text-muted">Pending analysis</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Confidence Score -->
-                            <div class="mb-4">
-                                <label class="text-muted small mb-2">Confidence Score</label>
-                                <div>
-                                    {% if detection.confidence_score %}
-                                        <div class="d-flex align-items-center">
-                                            <div class="progress flex-grow-1 me-3" style="height: 25px;">
-                                                <div class="progress-bar 
-                                                    {% if detection.confidence_score >= 80 %}bg-success
-                                                    {% elif detection.confidence_score >= 60 %}bg-warning
-                                                    {% else %}bg-danger{% endif %}" 
-                                                    role="progressbar" 
-                                                    style="width: {{ detection.confidence_score }}%">
-                                                    {{ detection.confidence_score|floatformat:1 }}%
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <span class="text-muted">N/A</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <hr>
-
-                            <!-- Uploaded At -->
-                            <div class="mb-3">
-                                <label class="text-muted small">Uploaded At</label>
-                                <p class="mb-0 fw-semibold">{{ detection.uploaded_at|date:"F d, Y H:i:s" }}</p>
-                            </div>
-
-                            {% if detection.analyzed_at %}
-                                <div class="mb-3">
-                                    <label class="text-muted small">Analyzed At</label>
-                                    <p class="mb-0 fw-semibold">{{ detection.analyzed_at|date:"F d, Y H:i:s" }}</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recommendations -->
-                {% if detection.result == 'fmd' %}
-                    <div class="col-12">
-                        <div class="alert alert-danger border-0 shadow-sm">
-                            <h5 class="alert-heading">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                FMD Detected - Immediate Action Required
-                            </h5>
-                            <hr>
-                            <ul class="mb-0">
-                                <li>Immediately isolate the affected animal from the herd</li>
-                                <li>Contact your veterinary officer for professional examination</li>
-                                <li>Restrict animal movement and visitors to the farm</li>
-                                <li>Implement biosecurity measures on the farm</li>
-                                <li>Monitor other animals for similar symptoms</li>
-                            </ul>
-                        </div>
-                    </div>
-                {% elif detection.result == 'healthy' %}
-                    <div class="col-12">
-                        <div class="alert alert-success border-0 shadow-sm">
-                            <h5 class="alert-heading">
-                                <i class="fas fa-check-circle me-2"></i>
-                                Animal appears healthy
-                            </h5>
-                            <p class="mb-0">No signs of FMD detected. Continue regular monitoring and maintain good farm hygiene practices.</p>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+    <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+      <a href="{% url 'history' %}" class="btn btn-sm me-3" style="background:#DBEAFE;color:#1D4ED8;border:none;"><i class="fas fa-arrow-left"></i></a>
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">Detection Details</h4>
+        <small class="text-muted">ID: {{ detection.id }}</small>
+      </div>
     </div>
+
+    <div class="container-fluid p-4">
+
+      <!-- ── RECOMMENDATION BANNER (always visible) ── -->
+      {% if detection.recommendation %}
+      {% with rec=detection.recommendation %}
+      <div class="mb-4 p-4 rounded-3 border-0 shadow-sm"
+           style="background:{% if rec.urgency == 'critical' %}linear-gradient(135deg,#FEF2F2,#FEE2E2){% elif rec.urgency == 'high' %}linear-gradient(135deg,#FFF7ED,#FFEDD5){% elif rec.urgency == 'moderate' %}linear-gradient(135deg,#FEFCE8,#FEF9C3){% else %}linear-gradient(135deg,#F0FDF4,#DCFCE7){% endif %};
+                border-left:5px solid {% if rec.urgency == 'critical' %}#DC2626{% elif rec.urgency == 'high' %}#F97316{% elif rec.urgency == 'moderate' %}#D97706{% else %}#16A34A{% endif %} !important;border-radius:14px;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="fw-bold mb-0" style="color:{% if rec.urgency == 'critical' %}#DC2626{% elif rec.urgency == 'high' %}#F97316{% elif rec.urgency == 'moderate' %}#D97706{% else %}#16A34A{% endif %};">
+            {% if rec.urgency == 'critical' %}⚠️ CRITICAL ACTION REQUIRED
+            {% elif rec.urgency == 'high' %}🔶 HIGH ALERT
+            {% elif rec.urgency == 'moderate' %}🟡 MODERATE CONCERN
+            {% else %}✅ HEALTHY — CONTINUE MONITORING{% endif %}
+          </h5>
+          <span class="badge" style="background:{% if rec.urgency == 'critical' %}#DC2626{% elif rec.urgency == 'high' %}#F97316{% elif rec.urgency == 'moderate' %}#D97706{% else %}#16A34A{% endif %};color:white;font-size:11px;">
+            {{ rec.get_urgency_display }}
+          </span>
+        </div>
+        <p class="fw-semibold mb-3" style="font-size:14px;color:#1E293B;">{{ rec.summary }}</p>
+
+        <!-- Full recommendation (collapsible) -->
+        <div id="fullRecCollapse" class="collapse">
+          <div class="mt-2 pt-3 border-top" style="border-color:rgba(0,0,0,0.08) !important;">
+            <pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;color:#334155;line-height:1.7;margin:0;">{{ rec.full_text }}</pre>
+          </div>
+        </div>
+        <button class="btn btn-sm mt-2 fw-semibold" data-bs-toggle="collapse" data-bs-target="#fullRecCollapse"
+                onclick="this.textContent = this.textContent.includes('Show') ? '▲ Hide Full Recommendation' : '▼ Show Full Recommendation'"
+                style="background:rgba(0,0,0,0.06);color:#334155;border:none;font-size:12px;">
+          ▼ Show Full Recommendation
+        </button>
+
+        {% if detection.result == 'fmd' %}
+        <div class="mt-3">
+          <a href="{% url 'farmer_inbox' %}" class="btn btn-sm fw-semibold"
+             style="background:{% if rec.urgency == 'critical' %}#DC2626{% else %}#1E3A8A{% endif %};color:white;border:none;font-size:12px;">
+            <i class="fas fa-comment-medical me-2"></i>Consult Veterinary Doctor Now
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      {% endwith %}
+      {% endif %}
+
+      <div class="row g-4">
+
+        <!-- IMAGE -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+            <div class="card-header bg-white py-3 px-4" style="border-radius:16px 16px 0 0;border-bottom:1px solid #EFF6FF;">
+              <div class="d-flex align-items-center justify-content-between">
+                <h6 class="fw-bold mb-0" style="color:#1E3A8A;">Uploaded Image</h6>
+                {% if detection.result == 'fmd' and detection.bounding_boxes %}
+                <span class="badge" style="background:#FEE2E2;color:#DC2626;font-size:11px;">
+                  <i class="fas fa-draw-polygon me-1"></i>{{ detection.bounding_boxes|length }} region{{ detection.bounding_boxes|length|pluralize }} marked
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="card-body p-3 text-center">
+              <div id="imgWrap" style="position:relative;display:inline-block;width:100%;">
+                <img id="cowImg" src="{{ detection.image.url }}" alt="Cattle"
+                     style="display:block;width:100%;max-height:420px;object-fit:contain;border-radius:10px;">
+                {% if detection.result == 'fmd' and detection.bounding_boxes %}
+                <canvas id="bboxCanvas" style="position:absolute;top:0;left:0;pointer-events:none;border-radius:10px;"></canvas>
+                {% endif %}
+              </div>
+              {% if detection.result == 'fmd' and detection.bounding_boxes %}
+              <p class="mt-2 mb-0" style="font-size:12px;color:#DC2626;">
+                <i class="fas fa-square me-1"></i>Red boxes show FMD-affected regions
+              </p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+            <div class="card-header bg-white py-3 px-4" style="border-radius:16px 16px 0 0;border-bottom:1px solid #EFF6FF;">
+              <h6 class="fw-bold mb-0" style="color:#1E3A8A;">Analysis Results</h6>
+            </div>
+            <div class="card-body p-4">
+
+              <div class="mb-4">
+                <label class="text-muted small mb-2 d-block">Detection Result</label>
+                {% if detection.result == 'fmd' %}
+                <div class="p-3 rounded-3" style="background:#FEF2F2;border-left:4px solid #DC2626;">
+                  <span class="fw-bold" style="color:#DC2626;font-size:15px;">⚠️ Foot and mouth disease detected</span>
+                </div>
+                {% else %}
+                <div class="p-3 rounded-3" style="background:#F0FDF4;border-left:4px solid #16A34A;">
+                  <span class="fw-bold" style="color:#16A34A;font-size:15px;">✅ Foot and mouth disease not detected</span>
+                </div>
+                {% endif %}
+              </div>
+
+              {% if detection.confidence_score is not None %}
+              <div class="mb-4">
+                <label class="text-muted small mb-2 d-block">Confidence Score</label>
+                <div class="progress" style="height:22px;border-radius:8px;">
+                  <div class="progress-bar {% if detection.confidence_score >= 80 %}bg-success{% elif detection.confidence_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+                       role="progressbar" style="width:{{ detection.confidence_score }}%;border-radius:8px;">
+                    {{ detection.confidence_score|floatformat:1 }}%
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+
+              {% if detection.result == 'fmd' and detection.bounding_boxes %}
+              <div class="mb-4">
+                <label class="text-muted small mb-2 d-block">Affected Regions</label>
+                <div class="rounded-3 overflow-hidden" style="border:1px solid #FCA5A5;">
+                  {% for box in detection.bounding_boxes %}
+                  <div class="d-flex justify-content-between align-items-center px-3 py-2{% if not forloop.last %} border-bottom{% endif %}"
+                       style="background:{% if forloop.counter0|divisibleby:2 %}#FEF2F2{% else %}white{% endif %};">
+                    <span style="color:#DC2626;font-size:13px;"><i class="fas fa-map-marker-alt me-2"></i>Region {{ forloop.counter }} — {{ box.class }}</span>
+                    <span class="badge" style="background:#DC2626;color:white;font-size:11px;">{{ box.confidence }}%</span>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <hr>
+              <div class="row g-2" style="font-size:13px;">
+                <div class="col-6">
+                  <label class="text-muted small">Animal ID</label>
+                  <div class="fw-semibold">{{ detection.animal_id|default:"N/A" }}</div>
+                </div>
+                <div class="col-6">
+                  <label class="text-muted small">Location</label>
+                  <div class="fw-semibold">{{ detection.location|default:"N/A" }}</div>
+                </div>
+                <div class="col-6">
+                  <label class="text-muted small">Uploaded</label>
+                  <div class="fw-semibold">{{ detection.uploaded_at|date:"M d, Y H:i" }}</div>
+                </div>
+                <div class="col-6">
+                  <label class="text-muted small">Analyzed</label>
+                  <div class="fw-semibold">{{ detection.analyzed_at|date:"M d, Y H:i"|default:"—" }}</div>
+                </div>
+              </div>
+              {% if detection.notes %}
+              <div class="mt-3 p-3 rounded-3" style="background:#F8FAFC;font-size:13px;">
+                <label class="text-muted small d-block mb-1">Notes</label>{{ detection.notes }}
+              </div>
+              {% endif %}
+
+              <!-- Quick actions -->
+              <div class="mt-4 d-flex gap-2 flex-wrap">
+                <a href="{% url 'farmer_inbox' %}" class="btn btn-sm fw-semibold" style="background:#1E3A8A;color:white;border:none;font-size:12px;">
+                  <i class="fas fa-comment-medical me-1"></i>Consult Vet
+                </a>
+                <a href="{% url 'farmer_appointments' %}" class="btn btn-sm fw-semibold" style="background:#F0F9FF;color:#1E3A8A;border:1px solid #BFDBFE;font-size:12px;">
+                  <i class="fas fa-calendar me-1"></i>Book Appointment
+                </a>
+                <a href="{% url 'vaccination_list' %}" class="btn btn-sm fw-semibold" style="background:#F0F9FF;color:#1E3A8A;border:1px solid #BFDBFE;font-size:12px;">
+                  <i class="fas fa-syringe me-1"></i>Vaccination History
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+{% if detection.result == 'fmd' and detection.bounding_boxes %}
+<script>
+(function() {
+    var boxes = {{ detection.bounding_boxes|safe }};
+    var img   = document.getElementById('cowImg');
+    var canvas = document.getElementById('bboxCanvas');
+    if (!canvas) return;
+    function draw() {
+        var natW=img.naturalWidth,natH=img.naturalHeight,dispW=img.offsetWidth,dispH=img.offsetHeight;
+        if(!natW||!dispW)return;
+        var sx=dispW/natW,sy=dispH/natH;
+        canvas.width=dispW;canvas.height=dispH;
+        canvas.style.width=dispW+'px';canvas.style.height=dispH+'px';
+        var ctx=canvas.getContext('2d');
+        ctx.clearRect(0,0,dispW,dispH);
+        boxes.forEach(function(box){
+            var cx=box.x*sx,cy=box.y*sy,bw=box.width*sx,bh=box.height*sy,x1=cx-bw/2,y1=cy-bh/2;
+            ctx.fillStyle='rgba(220,38,38,0.10)';ctx.fillRect(x1,y1,bw,bh);
+            ctx.strokeStyle='#DC2626';ctx.lineWidth=3;ctx.strokeRect(x1,y1,bw,bh);
+            var cs=14;ctx.lineWidth=4;
+            [[x1,y1,1,1],[x1+bw,y1,-1,1],[x1,y1+bh,1,-1],[x1+bw,y1+bh,-1,-1]].forEach(function(c){ctx.beginPath();ctx.moveTo(c[0]+c[2]*cs,c[1]);ctx.lineTo(c[0],c[1]);ctx.lineTo(c[0],c[1]+c[3]*cs);ctx.stroke();});
+            var label=(box.class||'FMD')+' '+parseFloat(box.confidence).toFixed(1)+'%';
+            ctx.font='bold 12px Arial';var tw=ctx.measureText(label).width,pw=tw+14,ph=22;
+            var lx=x1,ly=y1>ph+4?y1-ph-2:y1+bh+2;
+            ctx.fillStyle='#DC2626';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(lx,ly,pw,ph,5);else ctx.rect(lx,ly,pw,ph);ctx.fill();
+            ctx.fillStyle='#fff';ctx.fillText(label,lx+7,ly+15);
+        });
+    }
+    if(img.complete&&img.naturalWidth){draw();}else{img.addEventListener('load',draw);}
+    window.addEventListener('resize',function(){setTimeout(draw,50);});
+})();
+</script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+  {% include 'partials/sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">Appointments</h4>
+        <small class="text-muted">Schedule a veterinary visit for your farm</small>
+      </div>
+      <button class="btn fw-semibold" data-bs-toggle="modal" data-bs-target="#bookModal"
+              style="background:linear-gradient(90deg,#1E3A8A,#F97316);color:white;border:none;font-size:13px;">
+        <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+      </button>
+    </div>
+
+    <div class="container-fluid p-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>{{ message }}</div>
+      {% endfor %}
+
+      {% if appointments %}
+      <div class="card border-0 shadow-sm" style="border-radius:14px;">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size:13px;">
+              <thead>
+                <tr style="background:#F8FAFC;color:#64748B;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">
+                  <th class="py-3 px-4">Veterinary Doctor</th>
+                  <th class="py-3 px-3">Date & Time</th>
+                  <th class="py-3 px-3">Reason</th>
+                  <th class="py-3 px-3">Location</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3">Vet's Note</th>
+                  <th class="py-3 px-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for appt in appointments %}
+                <tr>
+                  <td class="py-3 px-4 fw-semibold" style="color:#1E3A8A;">Dr. {{ appt.vet.get_full_name|default:appt.vet.email }}</td>
+                  <td class="py-3 px-3">{{ appt.preferred_date|date:"M d, Y H:i" }}</td>
+                  <td class="py-3 px-3" style="max-width:180px;" title="{{ appt.reason }}">{{ appt.reason|truncatechars:45 }}</td>
+                  <td class="py-3 px-3">{{ appt.location|default:"—" }}</td>
+                  <td class="py-3 px-3">
+                    <span class="badge px-3 py-1" style="background:{{ appt.status_bg }};color:{{ appt.status_color }};font-size:11px;">
+                      {{ appt.get_status_display }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-3 text-muted" style="font-size:12px;">{{ appt.vet_notes|default:"—"|truncatechars:40 }}</td>
+                  <td class="py-3 px-3">
+                    {% if appt.status == 'pending' %}
+                    <form method="post" action="{% url 'farmer_cancel_appointment' appt.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;font-size:11px;"
+                              onclick="return confirm('Cancel this appointment?')">Cancel</button>
+                    </form>
+                    {% else %}—{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center py-5" style="color:#94A3B8;">
+        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+        <p>No appointments yet. Click <strong>Book Appointment</strong> to get started.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Book Appointment Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title fw-bold" style="color:#1E3A8A;"><i class="fas fa-calendar-plus me-2" style="color:#F97316;"></i>Book an Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-body px-4 pt-3">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Veterinary Doctor <span class="text-danger">*</span></label>
+            <select name="vet_id" class="form-select" style="font-size:13px;" required>
+              <option value="">— Select a vet —</option>
+              {% for vet in vets %}
+              <option value="{{ vet.id }}">Dr. {{ vet.get_full_name|default:vet.email }}{% if vet.profile.specialization %} — {{ vet.profile.specialization }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Preferred Date & Time <span class="text-danger">*</span></label>
+            <input type="datetime-local" name="preferred_date" class="form-control" style="font-size:13px;" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Reason for Visit <span class="text-danger">*</span></label>
+            <textarea name="reason" class="form-control" rows="3" style="font-size:13px;"
+                      placeholder="Describe the issue — e.g. suspected FMD symptoms in 3 cows, routine check-up, vaccination…" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Location on Farm</label>
+            <input type="text" name="location" class="form-control" style="font-size:13px;"
+                   placeholder="e.g. Pen A, North paddock, Main barn">
+          </div>
+
+        </div>
+        <div class="modal-footer border-0 px-4 pb-4 pt-0">
+          <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="background:#F1F5F9;color:#64748B;border:none;">Cancel</button>
+          <button type="submit" class="btn fw-semibold" style="background:linear-gradient(90deg,#1E3A8A,#F97316);color:white;border:none;">
+            <i class="fas fa-paper-plane me-2"></i>Send Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+  {% include 'partials/sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+      <a href="{% url 'vaccination_list' %}" class="btn btn-sm me-3" style="background:#DBEAFE;color:#1D4ED8;border:none;"><i class="fas fa-arrow-left"></i></a>
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">Record FMD Vaccination</h4>
+        <small class="text-muted">Add a vaccination event for your farm</small>
+      </div>
+    </div>
+
+    <div class="container-fluid p-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>{{ message }}</div>
+      {% endfor %}
+
+      <div class="row justify-content-center">
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-body p-4">
+              <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Vaccine Name</label>
+                  <input type="text" name="vaccine_name" class="form-control" style="font-size:13px;"
+                         value="FMD Vaccine" placeholder="e.g. FMD Vaccine, Aftovaxpur DOE">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Batch Number</label>
+                  <input type="text" name="batch_number" class="form-control" style="font-size:13px;"
+                         placeholder="Optional — from the vaccine packaging">
+                </div>
+
+                <div class="row g-3 mb-3">
+                  <div class="col-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Date Administered <span class="text-danger">*</span></label>
+                    <input type="date" name="date_administered" class="form-control" style="font-size:13px;" required>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Next Due Date</label>
+                    <input type="date" name="next_due_date" class="form-control" style="font-size:13px;">
+                    <div class="form-text" style="font-size:11px;">Typically 6 months after vaccination.</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Administered By</label>
+                  <input type="text" name="administered_by" class="form-control" style="font-size:13px;"
+                         placeholder="Vet name, clinic, or your own name if self-administered">
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label fw-semibold" style="font-size:13px;color:#1E3A8A;">Notes</label>
+                  <textarea name="notes" class="form-control" rows="3" style="font-size:13px;"
+                            placeholder="Any observations, reactions, or additional information…"></textarea>
+                </div>
+
+                <button type="submit" class="btn w-100 fw-semibold py-2"
+                        style="background:linear-gradient(90deg,#1E3A8A,#F97316);color:white;border:none;">
+                  <i class="fas fa-save me-2"></i>Save Vaccination Record
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

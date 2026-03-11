@@ -23,7 +23,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="mt-2 px-2">
+    <nav class="mt-2 px-2" style="overflow-y:auto;max-height:calc(100vh - 220px);">
         <p style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px 4px;">Menu</p>
 
         <a href="{% url 'vet_dashboard' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_dashboard' %}active{% endif %}">
@@ -34,6 +34,15 @@
         </a>
         <a href="{% url 'upload_image' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}">
             <i class="fas fa-cloud-upload-alt me-2"></i> Upload & Detect
+        </a>
+
+        <p style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 12px 4px;">Communication</p>
+        <a href="{% url 'vet_inbox' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_inbox' or request.resolver_match.url_name == 'vet_conversation' %}active{% endif %}">
+            <i class="fas fa-comments me-2"></i> Farmer Messages
+            {% if vet_unread_count > 0 %}<span class="badge rounded-pill ms-auto" style="background:#F97316;font-size:10px;">{{ vet_unread_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'vet_appointments' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_appointments' %}active{% endif %}">
+            <i class="fas fa-calendar-check me-2"></i> Appointments
         </a>
 
         <p style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 12px 4px;">Reports</p>
@@ -71,14 +80,6 @@
     font-size: 13px;
     transition: all 0.2s ease;
 }
-.vet-nav-link:hover {
-    background: rgba(251,146,60,0.15);
-    color: white;
-}
-.vet-nav-link.active {
-    background: rgba(251,146,60,0.25);
-    color: white;
-    font-weight: 600;
-    border-left: 3px solid #FB923C;
-}
+.vet-nav-link:hover { background: rgba(251,146,60,0.15); color: white; }
+.vet-nav-link.active { background: rgba(251,146,60,0.25); color: white; font-weight: 600; border-left: 3px solid #FB923C; }
 </style>

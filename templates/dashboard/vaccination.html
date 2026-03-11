@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+  {% include 'partials/sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">FMD Vaccination History</h4>
+        <small class="text-muted">{{ records|length }} record(s) on file</small>
+      </div>
+      <a href="{% url 'vaccination_add' %}" class="btn fw-semibold" style="background:linear-gradient(90deg,#1E3A8A,#F97316);color:white;border:none;font-size:13px;">
+        <i class="fas fa-plus me-2"></i>Record Vaccination
+      </a>
+    </div>
+
+    <div class="container-fluid p-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>{{ message }}</div>
+      {% endfor %}
+
+      {% if overdue %}
+      <div class="alert border-0 mb-4" style="background:#FEF2F2;border-left:4px solid #DC2626 !important;border-radius:12px;">
+        <strong style="color:#DC2626;"><i class="fas fa-exclamation-circle me-2"></i>{{ overdue|length }} Overdue Vaccination(s)</strong>
+        <p class="mb-0 mt-1" style="font-size:13px;color:#7F1D1D;">Some vaccinations are past their due date. Please contact your vet and schedule an immediate visit.</p>
+      </div>
+      {% endif %}
+
+      {% if due_soon %}
+      <div class="alert border-0 mb-4" style="background:#FFFBEB;border-left:4px solid #F97316 !important;border-radius:12px;">
+        <strong style="color:#B45309;"><i class="fas fa-clock me-2"></i>{{ due_soon|length }} Vaccination(s) Due Within 30 Days</strong>
+        <p class="mb-0 mt-1" style="font-size:13px;color:#92400E;">Plan ahead — schedule your next vaccination soon to keep your herd protected.</p>
+      </div>
+      {% endif %}
+
+      {% if records %}
+      <div class="card border-0 shadow-sm" style="border-radius:14px;">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size:13px;">
+              <thead>
+                <tr style="background:#F8FAFC;color:#64748B;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">
+                  <th class="py-3 px-4">Vaccine</th>
+                  <th class="py-3 px-3">Batch No.</th>
+                  <th class="py-3 px-3">Date Given</th>
+                  <th class="py-3 px-3">Next Due</th>
+                  <th class="py-3 px-3">Administered By</th>
+                  <th class="py-3 px-3">Notes</th>
+                  <th class="py-3 px-3">Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rec in records %}
+                <tr style="{% if rec.is_overdue %}background:#FFF5F5;{% elif rec.due_soon %}background:#FEFCE8;{% endif %}">
+                  <td class="py-3 px-4">
+                    <span class="fw-semibold" style="color:#1E3A8A;">{{ rec.vaccine_name }}</span>
+                    {% if rec.is_overdue %}
+                    <span class="badge ms-2" style="background:#FEE2E2;color:#DC2626;font-size:10px;">Overdue</span>
+                    {% elif rec.due_soon %}
+                    <span class="badge ms-2" style="background:#FEF9C3;color:#B45309;font-size:10px;">Due Soon</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-3 px-3 text-muted">{{ rec.batch_number|default:"—" }}</td>
+                  <td class="py-3 px-3">{{ rec.date_administered|date:"M d, Y" }}</td>
+                  <td class="py-3 px-3">
+                    {% if rec.next_due_date %}
+                    <span style="color:{% if rec.is_overdue %}#DC2626{% elif rec.due_soon %}#B45309{% else %}#16A34A{% endif %};">
+                      {{ rec.next_due_date|date:"M d, Y" }}
+                    </span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td class="py-3 px-3">{{ rec.administered_by|default:"—" }}</td>
+                  <td class="py-3 px-3 text-muted" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ rec.notes }}">
+                    {{ rec.notes|default:"—" }}
+                  </td>
+                  <td class="py-3 px-3">
+                    <form method="post" action="{% url 'vaccination_delete' rec.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;font-size:11px;"
+                              onclick="return confirm('Delete this record permanently?')">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center py-5" style="color:#94A3B8;">
+        <i class="fas fa-syringe fa-3x mb-3"></i>
+        <p>No vaccination records yet.</p>
+        <a href="{% url 'vaccination_add' %}" class="btn fw-semibold" style="background:#1E3A8A;color:white;border:none;">
+          <i class="fas fa-plus me-2"></i>Add First Record
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

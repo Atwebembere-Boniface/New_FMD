@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+  {% include 'partials/vet_sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0FDF4;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#064E3B;">Farmer Messages</h4>
+        <small class="text-muted">All incoming messages from all farmers</small>
+      </div>
+      {% if unread_count > 0 %}
+      <span class="badge rounded-pill px-3 py-2" style="background:#DC2626;font-size:12px;">{{ unread_count }} unread</span>
+      {% endif %}
+    </div>
+
+    <div class="container-fluid p-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>{{ message }}</div>
+      {% endfor %}
+
+      {% if all_inbox %}
+      <div class="d-flex flex-column gap-3">
+        {% for msg in all_inbox %}
+        <div class="card border-0 shadow-sm" style="border-radius:14px;border-left:4px solid {% if not msg.is_read and msg.sender != request.user %}#1E3A8A{% else %}#E2E8F0{% endif %} !important;">
+          <div class="card-body p-4">
+
+            <!-- Header: who sent it and when -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:42px;height:42px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;font-size:15px;">
+                  {{ msg.sender.get_full_name|default:msg.sender.email|first|upper }}
+                </div>
+                <div>
+                  <div class="fw-bold" style="color:#064E3B;font-size:14px;">
+                    {{ msg.sender.get_full_name|default:msg.sender.email }}
+                    {% if msg.sender == request.user %}<span class="text-muted fw-normal">(you — reply)</span>{% endif %}
+                  </div>
+                  <small class="text-muted">
+                    {% if msg.sender != request.user %}
+                      {{ msg.sender.profile.farm_name|default:"Simba Farms" }} &bull;
+                    {% endif %}
+                    {{ msg.sent_at|date:"M d, Y H:i" }}
+                  </small>
+                </div>
+              </div>
+              {% if msg.reply_to %}
+              <span class="badge" style="background:#F0FDF4;color:#16A34A;font-size:11px;border:1px solid #BBF7D0;">
+                <i class="fas fa-reply me-1"></i>Reply
+              </span>
+              {% endif %}
+            </div>
+
+            <!-- Quoted original if this is a reply -->
+            {% if msg.reply_to %}
+            <div class="px-3 py-2 mb-3 rounded-3" style="background:#F8FAFC;border-left:3px solid #CBD5E1;font-size:12px;color:#64748B;">
+              <em>Re: "{{ msg.reply_to.body|truncatechars:80 }}"</em>
+            </div>
+            {% endif %}
+
+            <!-- Message body -->
+            {% if msg.image %}
+            <div class="mb-2"><img src="{{ msg.image.url }}" style="max-width:280px;border-radius:10px;border:1px solid #E2E8F0;"></div>
+            {% endif %}
+            {% if msg.body %}
+            <p style="font-size:14px;color:#1E293B;line-height:1.6;margin-bottom:{% if msg.sender != request.user %}12px{% else %}0{% endif %};">{{ msg.body }}</p>
+            {% endif %}
+
+            <!-- Inline reply form (only for messages FROM farmers) -->
+            {% if msg.sender != request.user %}
+            <div class="mt-3 pt-3 border-top">
+              <button class="btn btn-sm mb-2" onclick="toggleReply('reply_{{ msg.id }}')"
+                      style="background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0;font-size:12px;">
+                <i class="fas fa-reply me-1"></i>Reply to {{ msg.sender.get_full_name|default:msg.sender.email }}
+              </button>
+              <div id="reply_{{ msg.id }}" style="display:none;">
+                <form method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input type="hidden" name="reply_to_id" value="{{ msg.id }}">
+                  <input type="hidden" name="farmer_id" value="{{ msg.sender.id }}">
+                  <div id="rImgBox_{{ msg.id }}" class="mb-2" style="display:none;">
+                    <span class="badge px-3 py-1" style="background:#F0FDF4;color:#16A34A;font-size:12px;">
+                      <i class="fas fa-image me-1"></i><span id="rImgName_{{ msg.id }}"></span>
+                      <button type="button" onclick="clearRImg('{{ msg.id }}')" class="btn-close ms-1" style="font-size:9px;"></button>
+                    </span>
+                  </div>
+                  <div class="d-flex align-items-end gap-2">
+                    <label for="rImg_{{ msg.id }}" class="btn btn-sm mb-0" style="background:#F0FDF4;color:#16A34A;border:none;flex-shrink:0;">
+                      <i class="fas fa-paperclip"></i>
+                    </label>
+                    <input type="file" id="rImg_{{ msg.id }}" name="image" accept="image/*" class="d-none"
+                           onchange="previewRImg(this,'{{ msg.id }}')">
+                    <textarea name="body" rows="2" placeholder="Type your reply…"
+                              class="form-control border-0 rounded-3 px-3"
+                              style="resize:none;background:#F0FDF4;font-size:13px;min-height:60px;"></textarea>
+                    <button type="submit" class="btn fw-semibold flex-shrink-0" style="background:#16A34A;color:white;border:none;border-radius:8px;font-size:12px;white-space:nowrap;">
+                      <i class="fas fa-paper-plane me-1"></i>Send
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5" style="color:#94A3B8;">
+        <i class="fas fa-inbox fa-3x mb-3" style="color:#BBF7D0;"></i>
+        <p style="font-size:14px;">Your inbox is empty. Farmer messages will appear here.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+function toggleReply(id){ var el=document.getElementById(id); el.style.display=el.style.display==='none'?'block':'none'; }
+function previewRImg(input,id){ if(input.files&&input.files[0]){ document.getElementById('rImgName_'+id).textContent=input.files[0].name; document.getElementById('rImgBox_'+id).style.display='block'; }}
+function clearRImg(id){ document.getElementById('rImg_'+id).value=''; document.getElementById('rImgBox_'+id).style.display='none'; }
+</script>
+{% endblock %}

@@ -1,36 +1,110 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    /* Design System Variables */
+    :root {
+        --permanent-blue: #1E3A8A;
+        --permanent-orange: #FB923C;
+        --permanent-white: #FFFFFF;
+        --bg-light: #f8fafc;
+    }
+
+    .main-content {
+        background-color: var(--bg-light);
+        min-height: 100vh;
+    }
+
+    /* Heading Styles */
+    .text-orange-heading {
+        color: var(--permanent-orange) !important;
+        font-weight: 700;
+    }
+
+    /* Container Styles */
+    .bg-permanent-blue {
+        background-color: var(--permanent-blue) !!important;
+        color: var(--permanent-white) !important;
+    }
+
+    .custom-card {
+        background-color: var(--permanent-white);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    /* Report Card Specifics */
+    .report-card {
+        background-color: var(--permanent-blue);
+        border-radius: 16px;
+        transition: transform 0.2s;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .report-card i, 
+    .report-card h5, 
+    .report-card p {
+        color: var(--permanent-white) !important;
+    }
+
+    /* Buttons */
+    .btn-orange-action {
+        background-color: var(--permanent-orange);
+        color: var(--permanent-white) !important;
+        border: none;
+        font-weight: 600;
+    }
+
+    .btn-orange-action:hover {
+        background-color: #e6822d;
+    }
+
+    .btn-outline-white {
+        color: var(--permanent-white) !important;
+        border: 1px solid var(--permanent-white);
+    }
+
+    .btn-outline-white:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Table Styling */
+    .table-thead {
+        background-color: var(--permanent-blue);
+        color: var(--permanent-white);
+    }
+</style>
+
 <div class="d-flex">
-    <!-- Sidebar -->
     {% include 'partials/sidebar.html' %}
 
-    <!-- Main Content -->
     <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px);">
-        <!-- Top Header -->
-        <div class="bg-white border-bottom p-4">
-            <h4 class="mb-1 fw-bold">Reports & Analytics</h4>
+        
+        <div class="bg-white border-bottom p-4" style="border-bottom: 3px solid var(--permanent-orange) !important;">
+            <h4 class="mb-1 text-orange-heading">Reports & Analytics</h4>
             <p class="text-muted mb-0">Generate comprehensive detection reports</p>
         </div>
 
-        <!-- Content -->
         <div class="container-fluid p-4">
-            <!-- Generate Report Options -->
+            
             <div class="row g-4 mb-4">
-                <!-- Daily Report -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card report-card border-0 shadow-sm h-100">
                         <div class="card-body p-4 text-center">
-                            <div class="mb-3" style="font-size: 48px; color: #2196F3;">
+                            <div class="mb-3" style="font-size: 48px;">
                                 <i class="fas fa-calendar-day"></i>
                             </div>
                             <h5 class="fw-bold mb-2">Daily Report</h5>
-                            <p class="text-muted mb-4">Today's detection activities and statistics</p>
+                            <p class="mb-4 small">Today's detection activities and statistics</p>
                             <div class="d-grid gap-2">
-                                <a href="{% url 'generate_report' 'daily' %}" class="btn btn-primary">
+                                <a href="{% url 'generate_report' 'daily' %}" class="btn btn-orange-action">
                                     <i class="fas fa-download me-2"></i>Download PDF
                                 </a>
-                                <a href="{% url 'email_report' 'daily' %}" class="btn btn-outline-primary">
+                                <a href="{% url 'email_report' 'daily' %}" class="btn btn-outline-white">
                                     <i class="fas fa-envelope me-2"></i>Email Report
                                 </a>
                             </div>
@@ -38,20 +112,19 @@
                     </div>
                 </div>
 
-                <!-- Weekly Report -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card report-card border-0 shadow-sm h-100">
                         <div class="card-body p-4 text-center">
-                            <div class="mb-3" style="font-size: 48px; color: #4CAF50;">
+                            <div class="mb-3" style="font-size: 48px;">
                                 <i class="fas fa-calendar-week"></i>
                             </div>
                             <h5 class="fw-bold mb-2">Weekly Report</h5>
-                            <p class="text-muted mb-4">Last 7 days summary and trends</p>
+                            <p class="mb-4 small">Last 7 days summary and trends</p>
                             <div class="d-grid gap-2">
-                                <a href="{% url 'generate_report' 'weekly' %}" class="btn btn-success">
+                                <a href="{% url 'generate_report' 'weekly' %}" class="btn btn-orange-action">
                                     <i class="fas fa-download me-2"></i>Download PDF
                                 </a>
-                                <a href="{% url 'email_report' 'weekly' %}" class="btn btn-outline-success">
+                                <a href="{% url 'email_report' 'weekly' %}" class="btn btn-outline-white">
                                     <i class="fas fa-envelope me-2"></i>Email Report
                                 </a>
                             </div>
@@ -59,20 +132,19 @@
                     </div>
                 </div>
 
-                <!-- Monthly Report -->
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card report-card border-0 shadow-sm h-100">
                         <div class="card-body p-4 text-center">
-                            <div class="mb-3" style="font-size: 48px; color: #FF9800;">
+                            <div class="mb-3" style="font-size: 48px;">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
                             <h5 class="fw-bold mb-2">Monthly Report</h5>
-                            <p class="text-muted mb-4">Current month comprehensive analysis</p>
+                            <p class="mb-4 small">Current month comprehensive analysis</p>
                             <div class="d-grid gap-2">
-                                <a href="{% url 'generate_report' 'monthly' %}" class="btn btn-warning">
+                                <a href="{% url 'generate_report' 'monthly' %}" class="btn btn-orange-action">
                                     <i class="fas fa-download me-2"></i>Download PDF
                                 </a>
-                                <a href="{% url 'email_report' 'monthly' %}" class="btn btn-outline-warning">
+                                <a href="{% url 'email_report' 'monthly' %}" class="btn btn-outline-white">
                                     <i class="fas fa-envelope me-2"></i>Email Report
                                 </a>
                             </div>
@@ -81,16 +153,15 @@
                 </div>
             </div>
 
-            <!-- Recent Reports -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0 fw-bold">Recent Generated Reports</h5>
+            <div class="card custom-card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 text-orange-heading">Recent Generated Reports</h5>
                 </div>
                 <div class="card-body p-0">
                     {% if reports %}
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
-                                <thead class="bg-light">
+                                <thead class="table-thead">
                                     <tr>
                                         <th class="px-4 py-3">Report Type</th>
                                         <th>Period</th>
@@ -104,23 +175,14 @@
                                     {% for report in reports %}
                                         <tr>
                                             <td class="px-4 py-3">
-                                                <span class="badge 
-                                                    {% if report.report_type == 'daily' %}bg-primary
-                                                    {% elif report.report_type == 'weekly' %}bg-success
-                                                    {% else %}bg-warning{% endif %}">
+                                                <span class="badge" style="background-color: var(--permanent-orange);">
                                                     {{ report.get_report_type_display }}
                                                 </span>
                                             </td>
-                                            <td>
-                                                {{ report.start_date|date:"M d" }} - {{ report.end_date|date:"M d, Y" }}
-                                            </td>
+                                            <td>{{ report.start_date|date:"M d" }} - {{ report.end_date|date:"M d, Y" }}</td>
                                             <td>{{ report.total_scans }}</td>
-                                            <td>
-                                                <span class="text-danger fw-semibold">{{ report.fmd_detected }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="text-success fw-semibold">{{ report.healthy_cattle }}</span>
-                                            </td>
+                                            <td class="text-danger fw-bold">{{ report.fmd_detected }}</td>
+                                            <td class="text-success fw-bold">{{ report.healthy_cattle }}</td>
                                             <td>{{ report.generated_at|date:"M d, Y H:i" }}</td>
                                         </tr>
                                     {% endfor %}
@@ -129,26 +191,23 @@
                         </div>
                     {% else %}
                         <div class="text-center py-5">
-                            <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                            <i class="fas fa-file-alt fa-4x mb-3" style="color: var(--permanent-blue);"></i>
                             <h5 class="text-muted">No Reports Generated Yet</h5>
-                            <p class="text-muted">Generate your first report using the options above</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Info Card -->
-            <div class="card border-0 shadow-sm mt-4" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(76, 175, 80, 0.1));">
+            <div class="card border-0 shadow-sm mt-4" style="background-color: var(--permanent-blue); border-radius: 16px;">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">
-                        <i class="fas fa-info-circle me-2 text-primary"></i>About Reports
+                    <h5 class="fw-bold mb-3 text-orange-heading">
+                        <i class="fas fa-info-circle me-2"></i>About Reports
                     </h5>
-                    <ul class="mb-0">
-                        <li class="mb-2"><strong>Daily Reports:</strong> Include all detections made today with detailed statistics and alerts</li>
-                        <li class="mb-2"><strong>Weekly Reports:</strong> Cover the last 7 days with trend analysis and recommendations</li>
-                        <li class="mb-2"><strong>Monthly Reports:</strong> Comprehensive analysis of the current month's activities</li>
-                        <li class="mb-2"><strong>PDF Format:</strong> All reports are generated in professional PDF format</li>
-                        <li><strong>Email Option:</strong> Reports can be sent directly to your registered email address</li>
+                    <ul class="mb-0" style="color: var(--permanent-white); list-style-type: square;">
+                        <li class="mb-2"><strong>Daily Reports:</strong> Detections made today with detailed statistics.</li>
+                        <li class="mb-2"><strong>Weekly Reports:</strong> Trends and recommendations from the last 7 days.</li>
+                        <li class="mb-2"><strong>Monthly Reports:</strong> High-level analysis of the current month.</li>
+                        <li><strong>Delivery:</strong> All reports available in PDF or via direct Email.</li>
                     </ul>
                 </div>
             </div>

@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+  {% include 'partials/sidebar.html' %}
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3">
+      <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">Messages</h4>
+      <small class="text-muted">Chat with your veterinary doctor</small>
+    </div>
+
+    <div class="d-flex" style="height:calc(100vh - 65px);">
+
+      <!-- LEFT: vet list -->
+      <div style="width:280px;flex-shrink:0;border-right:1px solid #E2E8F0;background:white;overflow-y:auto;">
+
+        {% if new_vets %}
+        <div class="px-3 pt-3 pb-1">
+          <p class="text-muted mb-2" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">New Conversation</p>
+          {% for vet in new_vets %}
+          <a href="?vet={{ vet.id }}"
+             class="d-flex align-items-center px-3 py-2 mb-1 rounded-3 text-decoration-none"
+             style="background:{% if selected_vet and selected_vet.id == vet.id %}#EFF6FF{% else %}#F8FAFC{% endif %};">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                 style="width:38px;height:38px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;font-size:14px;">
+              {{ vet.get_full_name|default:vet.email|first|upper }}
+            </div>
+            <div>
+              <div class="fw-semibold" style="color:#1E3A8A;font-size:13px;">Dr. {{ vet.get_full_name|default:vet.email }}</div>
+              <div class="text-muted" style="font-size:11px;">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        <hr class="mx-3 my-2">
+        {% endif %}
+
+        {% if messaged_vets %}
+        <div class="px-3 pt-1 pb-1">
+          <p class="text-muted mb-2" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Recent</p>
+          {% for vet in messaged_vets %}
+          <a href="?vet={{ vet.id }}"
+             class="d-flex align-items-center px-3 py-2 mb-1 rounded-3 text-decoration-none"
+             style="background:{% if selected_vet and selected_vet.id == vet.id %}#EFF6FF{% else %}white{% endif %};">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                 style="width:38px;height:38px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;font-size:14px;">
+              {{ vet.get_full_name|default:vet.email|first|upper }}
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="color:#1E3A8A;font-size:13px;">Dr. {{ vet.get_full_name|default:vet.email }}</div>
+              <div class="text-muted" style="font-size:11px;">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not messaged_vets and not new_vets %}
+        <div class="text-center py-5 text-muted px-3" style="font-size:13px;">
+          <i class="fas fa-user-md fa-2x mb-2" style="color:#CBD5E1;"></i><br>
+          No veterinary doctors registered yet.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT: message thread -->
+      <div class="flex-grow-1 d-flex flex-column" style="overflow:hidden;">
+        {% if selected_vet %}
+
+          <!-- Thread header -->
+          <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center" style="flex-shrink:0;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:40px;height:40px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;">
+              {{ selected_vet.get_full_name|default:selected_vet.email|first|upper }}
+            </div>
+            <div>
+              <div class="fw-bold" style="color:#1E3A8A;">Dr. {{ selected_vet.get_full_name|default:selected_vet.email }}</div>
+              <small class="text-muted">{{ selected_vet.profile.specialization|default:"Veterinary Doctor" }}</small>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div id="chatBox" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;">
+            {% if not thread %}
+            <div class="text-center text-muted py-5" style="font-size:13px;">
+              <i class="fas fa-comments fa-2x mb-2" style="color:#CBD5E1;"></i><br>
+              Start the conversation — describe your animal's condition or ask a question.
+            </div>
+            {% endif %}
+            {% for msg in thread %}
+              {% if msg.sender == request.user %}
+              <!-- Farmer message (right) -->
+              <div class="d-flex justify-content-end">
+                <div style="max-width:68%;">
+                  {% if msg.image %}
+                  <div class="mb-1 text-end">
+                    <img src="{{ msg.image.url }}" style="max-width:200px;border-radius:12px 12px 2px 12px;">
+                  </div>
+                  {% endif %}
+                  {% if msg.body %}
+                  <div class="px-3 py-2 text-white"
+                       style="background:#1E3A8A;border-radius:18px 18px 4px 18px;font-size:13px;line-height:1.6;">
+                    {{ msg.body }}
+                  </div>
+                  {% endif %}
+                  <div class="text-end mt-1" style="font-size:11px;color:#94A3B8;">
+                    {{ msg.sent_at|date:"M d, H:i" }}
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              <!-- Vet reply (left) -->
+              <div class="d-flex justify-content-start align-items-end gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:30px;height:30px;background:#DCFCE7;color:#16A34A;font-weight:700;font-size:11px;">
+                  Dr
+                </div>
+                <div style="max-width:68%;">
+                  {% if msg.image %}
+                  <div class="mb-1">
+                    <img src="{{ msg.image.url }}" style="max-width:200px;border-radius:12px 12px 12px 2px;">
+                  </div>
+                  {% endif %}
+                  {% if msg.body %}
+                  <div class="px-3 py-2"
+                       style="background:white;border:1px solid #E2E8F0;border-radius:18px 18px 18px 4px;font-size:13px;line-height:1.6;color:#1E293B;">
+                    {{ msg.body }}
+                  </div>
+                  {% endif %}
+                  <div class="mt-1" style="font-size:11px;color:#94A3B8;">
+                    {{ msg.sent_at|date:"M d, H:i" }}
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Compose box -->
+          <div class="bg-white border-top p-3" style="flex-shrink:0;">
+            <form method="post" enctype="multipart/form-data" id="msgForm">
+              {% csrf_token %}
+              <input type="hidden" name="vet_id" value="{{ selected_vet.id }}">
+              <div id="imgPreviewBox" class="mb-2" style="display:none;">
+                <span class="badge px-3 py-2" style="background:#EFF6FF;color:#1E3A8A;font-size:12px;">
+                  <i class="fas fa-image me-1"></i>
+                  <span id="imgName"></span>
+                  <button type="button" onclick="clearImg()" class="btn-close ms-2" style="font-size:9px;"></button>
+                </span>
+              </div>
+              <div class="d-flex align-items-end gap-2">
+                <label for="imgInput" class="btn btn-sm mb-0"
+                       style="background:#EFF6FF;color:#1E3A8A;border:none;flex-shrink:0;" title="Attach image">
+                  <i class="fas fa-paperclip"></i>
+                </label>
+                <input type="file" id="imgInput" name="image" accept="image/*"
+                       class="d-none" onchange="previewImg(this)">
+                <textarea name="body" rows="1"
+                          placeholder="Type your message…"
+                          class="form-control border-0 rounded-pill px-4"
+                          style="resize:none;background:#F1F5F9;font-size:13px;min-height:40px;max-height:110px;overflow:hidden;"
+                          oninput="autoResize(this)"
+                          onkeydown="sendOnEnter(event)"></textarea>
+                <button type="submit" class="btn flex-shrink-0"
+                        style="background:#1E3A8A;color:white;border:none;border-radius:50%;width:40px;height:40px;">
+                  <i class="fas fa-paper-plane" style="font-size:13px;"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+
+        {% else %}
+        <!-- No vet selected yet -->
+        <div class="d-flex align-items-center justify-content-center flex-grow-1 text-muted flex-column">
+          <i class="fas fa-hand-point-left fa-2x mb-3" style="color:#CBD5E1;"></i>
+          <p style="font-size:14px;">Select a veterinary doctor on the left to start a conversation.</p>
+        </div>
+        {% endif %}
+      </div><!-- end right panel -->
+
+    </div>
+  </div>
+</div>
+
+<script>
+{% if selected_vet %}
+const cb = document.getElementById('chatBox');
+if (cb) cb.scrollTop = cb.scrollHeight;
+{% endif %}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+function sendOnEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('msgForm').submit();
+  }
+}
+function previewImg(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('imgName').textContent = input.files[0].name;
+    document.getElementById('imgPreviewBox').style.display = 'block';
+  }
+}
+function clearImg() {
+  document.getElementById('imgInput').value = '';
+  document.getElementById('imgPreviewBox').style.display = 'none';
+}
+</script>
+{% endblock %}
