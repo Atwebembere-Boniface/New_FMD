@@ -5,17 +5,21 @@
     /* Custom Styles for this Dashboard */
     .dashboard-wrapper {
         display: flex;
-        background-color: #f8f9fa;
+        /* Forced background to match sidebar green for a seamless look */
+        background-color: #15803D; 
         min-height: 100vh;
     }
     
     .main-content {
         margin-left: 250px;
         width: calc(100% - 250px);
+        /* Main workspace remains light for readability */
+        background-color: #f8f9fa; 
     }
 
-    .bg-permanent-blue {
-        background-color: #1E3A8A !important;
+    /* Permanent Green Utility */
+    .bg-permanent-green {
+        background-color: #15803D !important;
     }
 
     .text-orange {
@@ -34,8 +38,8 @@
     }
 
     .stat-card {
-        flex: 1; /* Makes all cards equal width */
-        background-color: #1E3A8A;
+        flex: 1; 
+        background-color: #15803D; 
         border-radius: 12px;
         padding: 20px;
         border: none;
@@ -48,7 +52,7 @@
     
     .btn-upload {
         background-color: #FFFFFF;
-        color: #1E3A8A;
+        color: #15803D; 
         font-weight: bold;
         border: 2px solid #FB923C;
     }
@@ -56,6 +60,12 @@
     .btn-upload:hover {
         background-color: #FB923C;
         color: #FFFFFF;
+        border-color: #FB923C;
+    }
+
+    /* Fix for any badge lingering in blue */
+    .text-success, .bg-success {
+        background-color: #15803D !important;
     }
 </style>
 
@@ -104,7 +114,7 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm bg-permanent-blue mb-4">
+            <div class="card border-0 shadow-sm bg-permanent-green mb-4">
                 <div class="card-body p-5 text-center">
                     <i class="fas fa-cloud-upload-alt fa-3x text-orange mb-3"></i>
                     <h4 class="fw-bold text-permanent-white">Analyze Cattle Image</h4>
@@ -119,7 +129,7 @@
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold text-orange">Recent Detections</h5>
-                        <a href="{% url 'history' %}" class="text-primary text-decoration-none fw-bold">View All</a>
+                        <a href="{% url 'history' %}" class="fw-bold text-decoration-none" style="color: #15803D;">View All</a>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -140,15 +150,15 @@
                                         <tr>
                                             <td class="px-4 py-3">{{ detection.uploaded_at|date:"M d, Y H:i" }}</td>
                                             <td>
-                                                <span class="badge {% if detection.status == 'completed' %}bg-success{% elif detection.status == 'analyzing' %}bg-info{% else %}bg-secondary{% endif %}">
+                                                <span class="badge bg-permanent-green">
                                                     {{ detection.get_status_display }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {% if detection.result %}
-                                                    <span class="badge {% if detection.result == 'healthy' %}bg-success{% else %}bg-danger{% endif %}">
-                                                        {{ detection.get_result_display }}
-                                                    </span>
+                                                {% if detection.result == 'healthy' %}
+                                                    <span class="badge bg-success">Healthy</span>
+                                                {% elif detection.result %}
+                                                    <span class="badge bg-danger">FMD Detected</span>
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}
@@ -161,7 +171,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'detection_detail' detection.id %}" class="btn btn-sm btn-outline-primary">
+                                                <a href="{% url 'detection_detail' detection.id %}" class="btn btn-sm btn-outline-success" style="color: #15803D; border-color: #15803D;">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>

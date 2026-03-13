@@ -7,15 +7,159 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}{{ title }}{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        /* =============================================
+           GLOBAL GREEN THEME OVERRIDES
+           These run AFTER Bootstrap and style.css
+           to ensure green wins everywhere.
+        ============================================= */
+
+        /* Body text color */
+        body {
+            color: #15803D !important;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            background: linear-gradient(180deg, #15803D 0%, #166534 100%) !important;
+            background-color: #15803D !important;
+        }
+
+        /* ── Bootstrap color utilities ── */
+        .bg-primary   { background-color: #15803D !important; }
+        .bg-blue,
+        .bg-permanent-blue { background-color: #15803D !important; }
+
+        .text-primary { color: #15803D !important; }
+        .border-primary { border-color: #15803D !important; }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            background: linear-gradient(90deg, #15803D 0%, #FB923C 100%) !important;
+            border-color: #15803D !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background: linear-gradient(90deg, #166534 0%, #ea7c1e 100%) !important;
+            border-color: #166534 !important;
+            box-shadow: 0 6px 15px rgba(21, 128, 61, 0.4) !important;
+        }
+
+        .btn-outline-primary {
+            color: #15803D !important;
+            border-color: #15803D !important;
+        }
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus {
+            background-color: #15803D !important;
+            color: #ffffff !important;
+        }
+
+        /* ── Links ── */
+        a:not(.btn):not(.nav-link):not(.sidebar-link):not(.farmer-nav-link) {
+            color: #15803D;
+        }
+        a:not(.btn):not(.nav-link):not(.sidebar-link):not(.farmer-nav-link):hover {
+            color: #166534;
+        }
+
+        /* ── Form controls ── */
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #15803D !important;
+            box-shadow: 0 0 0 0.25rem rgba(21, 128, 61, 0.25) !important;
+        }
+        .form-control,
+        .form-select {
+            border-color: #15803D !important;
+        }
+
+        /* ── Badges ── */
+        .badge.bg-primary,
+        .badge.text-bg-primary {
+            background-color: #15803D !important;
+            color: #ffffff !important;
+        }
+
+        /* ── Progress bar ── */
+        .progress-bar {
+            background-color: #15803D !important;
+        }
+
+        /* ── Table header ── */
+        .table thead th {
+            border-bottom-color: #15803D !important;
+            background-color: rgba(21, 128, 61, 0.05) !important;
+        }
+
+        /* ── Pagination ── */
+        .page-link {
+            color: #15803D !important;
+        }
+        .page-item.active .page-link {
+            background-color: #15803D !important;
+            border-color: #15803D !important;
+            color: #ffffff !important;
+        }
+
+        /* ── Nav tabs / pills ── */
+        .nav-pills .nav-link.active,
+        .nav-tabs .nav-link.active {
+            background-color: #15803D !important;
+            border-color: #15803D !important;
+            color: #ffffff !important;
+        }
+        .nav-pills .nav-link,
+        .nav-tabs .nav-link {
+            color: #15803D !important;
+        }
+
+        /* ── Alerts (info / primary) ── */
+        .alert-primary {
+            background-color: rgba(21, 128, 61, 0.1) !important;
+            border-color: #15803D !important;
+            color: #14532D !important;
+        }
+
+        /* ── Active sidebar nav link (farmer) ── */
+        .farmer-nav-link.active {
+            background-color: #ffffff !important;
+            color: #15803D !important;
+            font-weight: 600;
+        }
+
+        /* ── Mobile overlay ── */
+        .sidebar-overlay.active {
+            background: rgba(21, 128, 61, 0.5) !important;
+        }
+
+        /* ── Mobile menu toggle button ── */
+        .mobile-menu-toggle {
+            background: linear-gradient(135deg, #15803D, #FB923C) !important;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar-thumb {
+            background: #15803D !important;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FB923C !important;
+        }
+
+        /* ── Auth wrapper background ── */
+        .auth-wrapper {
+            background: linear-gradient(135deg, rgba(21, 128, 61, 0.9) 0%, rgba(22, 101, 52, 0.85) 100%),
+                        url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover !important;
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -34,12 +178,9 @@
     
     {% block content %}{% endblock %}
     
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Mobile Menu Script -->
     <script>
-        // Mobile menu toggle functionality
         function toggleMobileMenu() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
@@ -50,14 +191,12 @@
             }
         }
         
-        // Close menu when clicking overlay
         document.addEventListener('DOMContentLoaded', function() {
             const overlay = document.querySelector('.sidebar-overlay');
             if (overlay) {
                 overlay.addEventListener('click', toggleMobileMenu);
             }
             
-            // Close menu when clicking a link on mobile
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function() {
@@ -69,7 +208,6 @@
         });
     </script>
     
-    <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
     
     {% block extra_js %}{% endblock %}

@@ -1,100 +1,84 @@
-<button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-    <i class="fas fa-bars fa-lg"></i>
-</button>
+<div class="sidebar text-white vh-100 position-fixed"
+     style="width:250px;left:0;top:0;background-color:#15803D;z-index:1000;">
 
-<div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
-
-<div class="sidebar bg-primary text-white vh-100 position-fixed" style="width: 250px; left: 0; top: 0; z-index: 1000;">
-    <div class="p-4 text-center border-bottom border-light">
-        <i class="fas fa-cow fa-3x mb-2" style="color: #FB923C;"></i>
-        <h5 class="mb-0 fw-bold" style="color: white !important;">FMD Detection</h5>
-        <small class="text-light">{{ request.user.profile.farm_name|default:"Simba Farms" }}</small>
+  <div class="p-4 text-center border-bottom" style="border-color:rgba(255,255,255,0.2)!important;">
+    <div class="mb-2" style="width:52px;height:52px;background-color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+      <i class="fas fa-cow fa-lg" style="color:#15803D;"></i>
     </div>
+    <h6 class="mb-0 fw-bold" style="color:white;font-size:13px;">FMD Detection</h6>
+    <small style="color:rgba(255,255,255,0.8);font-size:11px;">Simba Farms</small>
+  </div>
 
-    <nav class="mt-4">
-        <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-            <i class="fas fa-th-large me-3"></i>
-            Dashboard
-        </a>
-        <a href="{% url 'upload_image' %}" class="sidebar-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}">
-            <i class="fas fa-cloud-upload-alt me-3"></i>
-            Upload Image
-        </a>
-        
-        <a href="{% url 'farmer_inbox' %}" class="sidebar-link {% if 'inbox' in request.resolver_match.url_name or 'conversation' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="fas fa-comments me-3"></i>
-            Consult Vet
-            {% with unread_count=request.user.unread_message_count %}
-                {% if unread_count > 0 %}
-                    <span class="badge rounded-pill bg-warning text-dark ms-auto" style="font-size: 10px;">{{ unread_count }}</span>
-                {% endif %}
-            {% endwith %}
-        </a>
-
-        <a href="{% url 'farmer_appointments' %}" class="sidebar-link {% if request.resolver_match.url_name == 'farmer_appointments' %}active{% endif %}">
-            <i class="fas fa-calendar-check me-3"></i>
-            Appointments
-        </a>
-
-        <a href="{% url 'vaccination_list' %}" class="sidebar-link {% if 'vaccination' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="fas fa-syringe me-3"></i>
-            Vaccinations
-        </a>
-
-        <hr class="mx-3 my-2" style="opacity: 0.2;">
-
-        <a href="{% url 'history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
-            <i class="fas fa-history me-3"></i>
-            History
-        </a>
-        <a href="{% url 'reports' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-            <i class="fas fa-file-alt me-3"></i>
-            Reports
-        </a>
-        <a href="{% url 'help' %}" class="sidebar-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
-            <i class="fas fa-question-circle me-3"></i>
-            Help
-        </a>
-    </nav>
-
-    <div class="position-absolute bottom-0 w-100 p-4">
-        <a href="{% url 'logout' %}" class="btn w-100" style="background-color: #FB923C; color: white; border: none;">
-            <i class="fas fa-sign-out-alt me-2"></i>
-            Logout
-        </a>
+  <div class="px-4 py-3" style="border-bottom:1px solid rgba(255,255,255,0.2);">
+    <div class="d-flex align-items-center">
+      <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fas fa-user" style="color:white;font-size:14px;"></i>
+      </div>
+      <div class="ms-2">
+        <div style="color:white;font-size:12px;font-weight:600;">{{ request.user.get_full_name|default:request.user.email }}</div>
+        <div style="color:rgba(255,255,255,0.8);font-size:10px;">Farmer</div>
+      </div>
     </div>
+  </div>
+
+  <nav class="mt-2 px-2 pb-5" style="overflow-y:auto;max-height:calc(100vh - 280px);">
+
+    <p style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 12px 4px;">Menu</p>
+
+    <a href="{% url 'dashboard' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="fas fa-th-large me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'upload_image' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}">
+      <i class="fas fa-cloud-upload-alt me-2"></i>Upload Image
+    </a>
+    <a href="{% url 'history' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+      <i class="fas fa-history me-2"></i>History
+    </a>
+    <a href="{% url 'reports' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+      <i class="fas fa-file-alt me-2"></i>Reports
+    </a>
+    <a href="{% url 'help' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+      <i class="fas fa-question-circle me-2"></i>Help
+    </a>
+
+    <p style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:16px 12px 4px;">Communication</p>
+
+    <a href="{% url 'farmer_inbox' %}" class="farmer-nav-link {% if 'farmer_inbox' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="fas fa-comments me-2"></i>Messages
+    </a>
+    <a href="{% url 'farmer_appointments' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'farmer_appointments' %}active{% endif %}">
+      <i class="fas fa-calendar-check me-2"></i>Appointments
+    </a>
+    <a href="{% url 'vaccination_list' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'vaccination_list' or request.resolver_match.url_name == 'vaccination_add' %}active{% endif %}">
+      <i class="fas fa-syringe me-2"></i>Vaccination History
+    </a>
+
+    <p style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:16px 12px 4px;">Marketplace</p>
+
+    <a href="{% url 'marketplace' %}"
+       class="farmer-nav-link {% if 'marketplace' in request.resolver_match.url_name %}active{% endif %}"
+       style="{% if 'marketplace' not in request.resolver_match.url_name %}background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);{% endif %}">
+      <i class="fas fa-store me-2" style="color:white;"></i>
+      <span style="color:white;font-weight:600;">Visit Market</span>
+      <span class="ms-auto badge" style="background:white;color:#15803D;font-size:9px;padding:3px 6px;">NEW</span>
+    </a>
+
+  </nav>
+
+  <div class="position-absolute bottom-0 w-100 p-3">
+    <a href="{% url 'logout' %}" class="btn w-100 py-2"
+       style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.4);font-size:13px;border-radius:8px;">
+      <i class="fas fa-sign-out-alt me-2"></i>Logout
+    </a>
+  </div>
 </div>
 
 <style>
-    .sidebar {
-        background: linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%) !important;
-        overflow-y: auto; /* Allows scrolling if many menu items added */
-    }
-    
-    .sidebar-link {
-        display: flex;
-        align-items: center;
-        padding: 12px 25px;
-        color: white;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        border-left: 4px solid transparent;
-        font-size: 14px;
-    }
-    
-    .sidebar-link:hover {
-        background-color: rgba(251, 146, 60, 0.2);
-        color: white;
-        border-left-color: #FB923C;
-    }
-    
-    .sidebar-link.active {
-        background-color: rgba(251, 146, 60, 0.3);
-        border-left-color: #FB923C;
-        font-weight: 600;
-    }
-
-    .ms-auto {
-        margin-left: auto !important;
-    }
+.farmer-nav-link {
+  display:flex;align-items:center;padding:10px 14px;
+  color:rgba(255,255,255,0.9);text-decoration:none;
+  border-radius:8px;margin-bottom:2px;font-size:13px;transition:all .2s;
+}
+.farmer-nav-link:hover { background:rgba(255,255,255,0.15);color:white; }
+.farmer-nav-link.active { background:white;color:#15803D!important;font-weight:600; }
 </style>

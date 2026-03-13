@@ -8,7 +8,7 @@
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: #ffffff;
-    color: #1E3A8A;
+    color: #15803D;
     overflow-x: hidden;
 }
 
@@ -19,7 +19,7 @@ body {
     top: 0;
     height: 100vh;
     width: 280px;
-    background: linear-gradient(180deg, #1E3A8A 0%, #1E40AF 100%);
+    background: linear-gradient(180deg, #15803D 0%, #166534 100%);
     z-index: 1000;
     overflow-y: auto;
     transition: transform 0.3s ease;
@@ -63,7 +63,7 @@ body {
     top: 20px;
     left: 20px;
     z-index: 1100;
-    background: linear-gradient(135deg, #1E3A8A, #FB923C);
+    background: linear-gradient(135deg, #15803D, #FB923C);
     color: white;
     border: none;
     padding: 15px 18px;
@@ -92,7 +92,7 @@ body {
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15) !important;
+    box-shadow: 0 8px 20px rgba(21, 128, 61, 0.15) !important;
 }
 
 /* Headings */
@@ -102,14 +102,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-primary {
-    color: #1E3A8A !important;
+    color: #15803D !important;
 }
 
 /* Form Styles */
 .form-control,
 .form-select {
     border-radius: 12px;
-    border: 2px solid #1E3A8A;
+    border: 2px solid #15803D;
     padding: 14px 16px;
     transition: all 0.3s ease;
     font-size: 16px;
@@ -131,7 +131,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-    background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%);
+    background: linear-gradient(90deg, #15803D 0%, #FB923C 100%);
     border: none;
     color: white;
 }
@@ -147,8 +147,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-outline-primary {
-    color: #1E3A8A;
-    border: 2px solid #1E3A8A;
+    color: #15803D;
+    border: 2px solid #15803D;
 }
 
 .btn-warning {
@@ -166,7 +166,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bg-primary {
-    background-color: #1E3A8A !important;
+    background-color: #15803D !important;
 }
 
 .bg-warning {
@@ -179,12 +179,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .table thead th {
-    border-bottom: 2px solid #1E3A8A;
+    border-bottom: 2px solid #15803D;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 14px;
     color: #FB923C;
-    background-color: rgba(30, 58, 138, 0.05);
+    background-color: rgba(21, 128, 61, 0.05);
     white-space: nowrap;
     padding: 16px;
 }
@@ -223,7 +223,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Progress Bar */
 .progress {
     border-radius: 12px;
-    background-color: rgba(30, 58, 138, 0.1);
+    background-color: rgba(21, 128, 61, 0.1);
     height: 32px;
 }
 
@@ -237,7 +237,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Auth Pages Background */
 .auth-wrapper {
     min-height: 100vh;
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
+    background: linear-gradient(135deg, rgba(21, 128, 61, 0.9) 0%, rgba(22, 101, 52, 0.85) 100%),
                 url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
     background-attachment: fixed;
     padding: 20px;
@@ -258,7 +258,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #1E3A8A;
+    background: #15803D;
     border-radius: 5px;
 }
 

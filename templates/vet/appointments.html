@@ -65,33 +65,35 @@
               {% endif %}
 
               {% if appt.status == 'pending' %}
-              <form method="post" action="{% url 'vet_respond_appointment' appt.id %}">
+              <form method="post" action="{% url 'vet_respond_appointment' appt.id %}" id="appt-form-{{ appt.id }}">
                 {% csrf_token %}
+                <input type="hidden" name="action" id="action-{{ appt.id }}" value="">
                 <div class="mb-2">
                   <input type="text" name="vet_notes" class="form-control form-control-sm"
                          style="font-size:12px;"
                          placeholder="Optional note to farmer (prep instructions, reason for rejection…)">
                 </div>
                 <div class="d-flex gap-2">
-                  <button type="submit" name="action" value="approve"
+                  <button type="button"
+                          onclick="submitAppt('{{ appt.id }}', 'approve')"
                           class="btn btn-sm fw-semibold flex-fill"
                           style="background:#16A34A;color:white;border:none;font-size:12px;">
                     <i class="fas fa-check me-1"></i>Approve
                   </button>
-                  
-                  <button type="submit" name="action" value="reject"
+                  <button type="button"
+                          onclick="submitAppt('{{ appt.id }}', 'reject')"
                           class="btn btn-sm fw-semibold flex-fill"
-                          style="background:#FEE2E2;color:#DC2626;border:none;font-size:12px;"
-                          onclick="return confirm('Reject this appointment request?')">
+                          style="background:#FEE2E2;color:#DC2626;border:none;font-size:12px;">
                     <i class="fas fa-times me-1"></i>Reject
                   </button>
                 </div>
               </form>
 
               {% elif appt.status == 'approved' %}
-              <form method="post" action="{% url 'vet_respond_appointment' appt.id %}">
+              <form method="post" action="{% url 'vet_respond_appointment' appt.id %}" id="appt-form-{{ appt.id }}">
                 {% csrf_token %}
-                <button type="submit" name="action" value="complete"
+                <input type="hidden" name="action" value="complete">
+                <button type="submit"
                         class="btn btn-sm w-100 fw-semibold"
                         style="background:#DBEAFE;color:#1D4ED8;border:none;font-size:12px;">
                   <i class="fas fa-check-double me-1"></i>Mark as Completed
@@ -118,4 +120,14 @@
     </div>
   </div>
 </div>
+
+<script>
+function submitAppt(apptId, action) {
+  if (action === 'reject') {
+    if (!confirm('Reject this appointment request?')) return;
+  }
+  document.getElementById('action-' + apptId).value = action;
+  document.getElementById('appt-form-' + apptId).submit();
+}
+</script>
 {% endblock %}

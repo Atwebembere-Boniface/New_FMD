@@ -1,6 +1,3 @@
-"""
-URL Configuration for detection app
-"""
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
@@ -12,24 +9,20 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
 
-    path('password-reset/',
-         auth_views.PasswordResetView.as_view(
-             template_name='auth/password_reset.html',
-             email_template_name='auth/password_reset_email.html',
-             subject_template_name='auth/password_reset_subject.txt',
-             success_url='/password-reset/done/'
-         ), name='password_reset'),
-    path('password-reset/done/',
-         auth_views.PasswordResetDoneView.as_view(template_name='auth/password_reset_done.html'),
-         name='password_reset_done'),
-    path('password-reset-confirm/<uidb64>/<token>/',
-         auth_views.PasswordResetConfirmView.as_view(
-             template_name='auth/password_reset_confirm.html',
-             success_url='/password-reset-complete/'
-         ), name='password_reset_confirm'),
-    path('password-reset-complete/',
-         auth_views.PasswordResetCompleteView.as_view(template_name='auth/password_reset_complete.html'),
-         name='password_reset_complete'),
+    path('password-reset/', auth_views.PasswordResetView.as_view(
+        template_name='auth/password_reset.html',
+        email_template_name='auth/password_reset_email.html',
+        subject_template_name='auth/password_reset_subject.txt',
+        success_url='/password-reset/done/'
+    ), name='password_reset'),
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(
+        template_name='auth/password_reset_done.html'), name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='auth/password_reset_confirm.html',
+        success_url='/password-reset-complete/'
+    ), name='password_reset_confirm'),
+    path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='auth/password_reset_complete.html'), name='password_reset_complete'),
 
     # ── Farmer Dashboard ──────────────────────────────────────────────────────
     path('dashboard/', views.dashboard_view, name='dashboard'),
@@ -75,6 +68,13 @@ urlpatterns = [
     # ── Vet Appointments ──────────────────────────────────────────────────────
     path('vet/appointments/', views.vet_appointments_view, name='vet_appointments'),
     path('vet/appointments/<uuid:appt_id>/respond/', views.vet_respond_appointment, name='vet_respond_appointment'),
+
+    # ── Marketplace ───────────────────────────────────────────────────────────
+    path('marketplace/', views.marketplace_view, name='marketplace'),
+    path('marketplace/post/', views.marketplace_create, name='marketplace_create'),
+    path('marketplace/<uuid:listing_id>/', views.marketplace_listing_detail, name='marketplace_detail'),
+    path('marketplace/<uuid:listing_id>/delete/', views.marketplace_delete, name='marketplace_delete'),
+    path('marketplace/<uuid:listing_id>/toggle/', views.marketplace_toggle, name='marketplace_toggle'),
 
     # ── AJAX ──────────────────────────────────────────────────────────────────
     path('api/unread-count/', views.unread_count_view, name='unread_count'),

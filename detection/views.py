@@ -16,6 +16,7 @@ import logging
 from .forms import UserRegistrationForm, UserLoginForm, DetectionUploadForm, VetRegistrationForm
 from .models import Detection, SystemStatistics, UserProfile, Report, Notification
 from .models import DirectMessage, Appointment, VaccinationRecord
+from .models import MarketListing, MarketComment
 from .services import analyze_cattle_image
 from .recommendations import generate_recommendation
 
@@ -45,7 +46,6 @@ def is_admin_or_vet(user):
 def register_view(request):
     if request.user.is_authenticated:
         return _redirect_by_role(request.user)
-
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -56,21 +56,18 @@ def register_view(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = UserRegistrationForm()
-
     return render(request, 'auth/register.html', {'form': form, 'title': 'Register - FMD Detection System'})
 
 
 def login_view(request):
     if request.user.is_authenticated:
         return _redirect_by_role(request.user)
-
     if request.method == 'POST':
         form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
-
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.first_name or user.email}!')
@@ -82,7 +79,6 @@ def login_view(request):
             messages.error(request, 'Invalid email or password.')
     else:
         form = UserLoginForm()
-
     return render(request, 'auth/login.html', {'form': form, 'title': 'Login - FMD Detection System'})
 
 
@@ -111,7 +107,6 @@ def dashboard_view(request):
         return redirect('admin_dashboard')
     if is_vet(request.user):
         return redirect('vet_dashboard')
-
     user_detections = Detection.objects.filter(user=request.user)
     total_scans = user_detections.count()
     fmd_detected = user_detections.filter(result='fmd').count()
@@ -119,7 +114,6 @@ def dashboard_view(request):
     recent_detections = user_detections.select_related('user')[:5]
     first_day = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     this_month_scans = user_detections.filter(uploaded_at__gte=first_day).count()
-
     context = {
         'title': 'Dashboard - FMD Detection System',
         'total_scans': total_scans,
@@ -140,7 +134,6 @@ def admin_dashboard_view(request):
     if not is_admin(request.user):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('dashboard')
-
     all_detections = Detection.objects.select_related('user', 'user__profile').all()
     total_scans = all_detections.count()
     fmd_detected = all_detections.filter(result='fmd').count()
@@ -149,11 +142,9 @@ def admin_dashboard_view(request):
     total_vets = User.objects.filter(profile__role='vet').count()
     recent_detections = all_detections[:10]
     unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False).count()
-
     week_ago = timezone.now() - timedelta(days=7)
     weekly_scans = all_detections.filter(uploaded_at__gte=week_ago).count()
     weekly_fmd = all_detections.filter(uploaded_at__gte=week_ago, result='fmd').count()
-
     context = {
         'title': 'Admin Dashboard - FMD Detection System',
         'total_scans': total_scans,
@@ -173,22 +164,17 @@ def admin_dashboard_view(request):
 def admin_uploads_view(request):
     if not is_admin(request.user):
         return redirect('dashboard')
-
     detections = Detection.objects.select_related('user', 'user__profile').all()
-
     result_filter = request.GET.get('result', '')
     status_filter = request.GET.get('status', '')
     user_filter = request.GET.get('user', '')
-
     if result_filter:
         detections = detections.filter(result=result_filter)
     if status_filter:
         detections = detections.filter(status=status_filter)
     if user_filter:
         detections = detections.filter(user__id=user_filter)
-
     users = User.objects.filter(detections__isnull=False).distinct()
-
     context = {
         'title': 'All Uploads - Admin',
         'detections': detections,
@@ -204,7 +190,6 @@ def admin_uploads_view(request):
 def admin_register_vet_view(request):
     if not is_admin(request.user):
         return redirect('dashboard')
-
     if request.method == 'POST':
         form = VetRegistrationForm(request.POST)
         if form.is_valid():
@@ -212,34 +197,19 @@ def admin_register_vet_view(request):
             try:
                 send_mail(
                     subject='FMD Detection System - Your Veterinary Doctor Account',
-                    message=f"""Dear Dr. {vet_user.get_full_name()},
-
-Your veterinary doctor account has been created on the FMD Early Detection System.
-
-Login Details:
-  Email: {vet_user.email}
-  Password: {form.cleaned_data['password']}
-
-Please login at: {request.build_absolute_uri('/').rstrip('/')}
-
-Best regards,
-FMD Detection System Admin
-Simba Farms
-""",
+                    message=f"""Dear Dr. {vet_user.get_full_name()},\n\nYour veterinary doctor account has been created.\n\nEmail: {vet_user.email}\nPassword: {form.cleaned_data['password']}\n\nLogin at: {request.build_absolute_uri('/')}\n\nFMD Detection System\nSimba Farms""",
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[vet_user.email],
                     fail_silently=True,
                 )
             except Exception as e:
                 logger.error(f"Failed to send vet credentials email: {e}")
-
-            messages.success(request, f'Veterinary doctor Dr. {vet_user.get_full_name()} registered successfully! Login credentials sent to {vet_user.email}.')
+            messages.success(request, f'Dr. {vet_user.get_full_name()} registered successfully!')
             return redirect('admin_vets')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = VetRegistrationForm()
-
     return render(request, 'admin_panel/register_vet.html', {'form': form, 'title': 'Register Veterinary Doctor'})
 
 
@@ -247,47 +217,32 @@ Simba Farms
 def admin_vets_view(request):
     if not is_admin(request.user):
         return redirect('dashboard')
-
     vets = User.objects.filter(profile__role='vet').select_related('profile')
-    context = {
-        'title': 'Veterinary Doctors - Admin',
-        'vets': vets,
-    }
-    return render(request, 'admin_panel/vets.html', context)
+    return render(request, 'admin_panel/vets.html', {'title': 'Veterinary Doctors - Admin', 'vets': vets})
 
 
 @login_required
 def admin_notifications_view(request):
     if not is_admin(request.user):
         return redirect('dashboard')
-
     notifications = Notification.objects.filter(recipient=request.user).select_related('detection', 'detection__user')
     notifications.filter(is_read=False).update(is_read=True)
-
-    context = {
-        'title': 'Notifications - Admin',
-        'notifications': notifications,
-    }
-    return render(request, 'admin_panel/notifications.html', context)
+    return render(request, 'admin_panel/notifications.html', {'title': 'Notifications - Admin', 'notifications': notifications})
 
 
 @login_required
 def admin_generate_report_view(request, report_type):
     if not is_admin(request.user):
         return redirect('dashboard')
-
     if report_type not in ['daily', 'weekly', 'monthly']:
         messages.error(request, 'Invalid report type.')
         return redirect('admin_dashboard')
-
     try:
         from .reports import AdminReportGenerator
         generator = AdminReportGenerator(report_type)
         pdf = generator.generate()
-
         response = HttpResponse(pdf, content_type='application/pdf')
-        filename = f'FMD_Admin_{report_type}_report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Disposition'] = f'attachment; filename="FMD_Admin_{report_type}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
         return response
     except Exception as e:
         messages.error(request, f'Error generating report: {str(e)}')
@@ -305,25 +260,16 @@ def vet_dashboard_view(request):
             return redirect('admin_dashboard')
         messages.error(request, 'Access denied. Veterinary doctor privileges required.')
         return redirect('dashboard')
-
     all_detections = Detection.objects.select_related('user', 'user__profile').all()
-    total_scans = all_detections.count()
-    fmd_detected = all_detections.filter(result='fmd').count()
-    healthy_cattle = all_detections.filter(result='healthy').count()
-    recent_detections = all_detections[:8]
-
     vet_detections = Detection.objects.filter(user=request.user)
-    vet_total = vet_detections.count()
-    vet_fmd = vet_detections.filter(result='fmd').count()
-
     context = {
         'title': 'Veterinary Dashboard - FMD Detection System',
-        'total_scans': total_scans,
-        'fmd_detected': fmd_detected,
-        'healthy_cattle': healthy_cattle,
-        'recent_detections': recent_detections,
-        'vet_total': vet_total,
-        'vet_fmd': vet_fmd,
+        'total_scans': all_detections.count(),
+        'fmd_detected': all_detections.filter(result='fmd').count(),
+        'healthy_cattle': all_detections.filter(result='healthy').count(),
+        'recent_detections': all_detections[:8],
+        'vet_total': vet_detections.count(),
+        'vet_fmd': vet_detections.filter(result='fmd').count(),
     }
     return render(request, 'vet/dashboard.html', context)
 
@@ -332,50 +278,40 @@ def vet_dashboard_view(request):
 def vet_all_uploads_view(request):
     if not is_vet(request.user):
         return redirect('dashboard')
-
     detections = Detection.objects.select_related('user', 'user__profile').all()
     result_filter = request.GET.get('result', '')
     if result_filter:
         detections = detections.filter(result=result_filter)
-
-    context = {
+    return render(request, 'vet/all_uploads.html', {
         'title': 'All Farm Detections - Vet',
         'detections': detections,
         'result_filter': result_filter,
-    }
-    return render(request, 'vet/all_uploads.html', context)
+    })
 
 
 @login_required
 def vet_generate_report_view(request, report_type):
     if not is_vet(request.user):
         return redirect('dashboard')
-
     if report_type not in ['daily', 'weekly', 'monthly', 'all']:
         messages.error(request, 'Invalid report type.')
         return redirect('vet_dashboard')
-
     try:
         from .reports import VetReportGenerator
         generator = VetReportGenerator(request.user, report_type)
         pdf = generator.generate()
-
         rtype = report_type if report_type != 'all' else 'monthly'
         start_date, end_date, _ = generator.get_date_range()
         data = generator.get_report_data(start_date, end_date)
         Report.objects.create(
-            user=request.user,
-            report_type=rtype,
-            start_date=start_date,
-            end_date=end_date,
+            user=request.user, report_type=rtype,
+            start_date=start_date, end_date=end_date,
             total_scans=data['total_scans'],
             fmd_detected=data['fmd_detected'],
             healthy_cattle=data['healthy_cattle'],
         )
-
         response = HttpResponse(pdf, content_type='application/pdf')
-        filename = f'FMD_Vet_{report_type}_report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Disposition'] = f'attachment; filename="FMD_Vet_{report_type}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
         return response
     except Exception as e:
         messages.error(request, f'Error generating report: {str(e)}')
@@ -386,13 +322,8 @@ def vet_generate_report_view(request, report_type):
 def vet_detection_detail_view(request, detection_id):
     if not is_vet(request.user):
         return redirect('dashboard')
-
     detection = get_object_or_404(Detection, id=detection_id)
-    context = {
-        'title': 'Detection Details',
-        'detection': detection,
-    }
-    return render(request, 'vet/detection_detail.html', context)
+    return render(request, 'vet/detection_detail.html', {'title': 'Detection Details', 'detection': detection})
 
 
 # ========================================
@@ -403,7 +334,6 @@ def vet_detection_detail_view(request, detection_id):
 def upload_image_view(request):
     if request.method == 'POST':
         captured_image_data = request.POST.get('captured_image', '')
-
         if captured_image_data:
             import base64
             from django.core.files.base import ContentFile
@@ -423,9 +353,7 @@ def upload_image_view(request):
             detection.save()
 
         try:
-            image_path = detection.image.path
-            analysis_result = analyze_cattle_image(image_path)
-
+            analysis_result = analyze_cattle_image(detection.image.path)
             detection.status = 'completed'
             detection.result = analysis_result['result']
             detection.result_label = analysis_result.get('result_label', '')
@@ -441,8 +369,6 @@ def upload_image_view(request):
                     logger.warning(f"Could not save annotated image: {ann_err}")
 
             update_statistics(detection)
-
-            # Generate recommendation
             try:
                 generate_recommendation(detection)
             except Exception as rec_err:
@@ -453,8 +379,7 @@ def upload_image_view(request):
             if detection.result == 'fmd':
                 messages.warning(request, f'⚠️ Foot and mouth disease detected with {detection.confidence_score:.1f}% confidence! Please isolate the animal immediately.')
             else:
-                messages.success(request, f'✅ Foot and mouth disease not detected ({detection.confidence_score:.1f}% confidence).')
-
+                messages.success(request, f'✅ No FMD detected ({detection.confidence_score:.1f}% confidence).')
         except Exception as e:
             detection.status = 'completed'
             detection.result = 'healthy'
@@ -464,69 +389,38 @@ def upload_image_view(request):
             detection.analyzed_at = timezone.now()
             detection.save()
             update_statistics(detection)
-            messages.warning(request, 'Analysis completed. Please try uploading a clearer image for better accuracy.')
+            messages.warning(request, 'Analysis completed. Please try uploading a clearer image.')
 
         if is_vet(request.user):
             return redirect('vet_detection_detail', detection_id=detection.id)
         return redirect('detection_detail', detection_id=detection.id)
     else:
         form = DetectionUploadForm()
-
     return render(request, _upload_template(request.user), {'form': form, 'title': 'Upload Image - FMD Detection System'})
 
 
 def _upload_template(user):
-    if is_vet(user):
-        return 'vet/upload.html'
-    return 'dashboard/upload.html'
+    return 'vet/upload.html' if is_vet(user) else 'dashboard/upload.html'
 
 
 def _notify_admins_of_detection(request, detection):
-    admins = User.objects.filter(
-        Q(is_superuser=True) | Q(profile__role='admin')
-    ).distinct()
-
-    subject = f'FMD Detection System - {"⚠️ FMD Alert" if detection.result == "fmd" else "New Upload"}'
+    admins = User.objects.filter(Q(is_superuser=True) | Q(profile__role='admin')).distinct()
     uploader_name = detection.user.get_full_name() or detection.user.email
     result_display = detection.result_label or detection.get_result_display()
     confidence = f"{detection.confidence_score:.1f}%" if detection.confidence_score else 'N/A'
-
-    message = f"""New detection uploaded and analyzed on the FMD Detection System.
-
-Uploaded By: {uploader_name} ({detection.user.email})
-Result: {result_display}
-Confidence: {confidence}
-Time: {detection.uploaded_at.strftime('%Y-%m-%d %H:%M')}
-Animal ID: {detection.animal_id or 'N/A'}
-Location: {detection.location or 'N/A'}
-
-{"⚠️ ALERT: FMD detected! Immediate action required." if detection.result == 'fmd' else ""}
-
-View in admin panel: {request.build_absolute_uri('/').rstrip('/')}/admin-panel/uploads/
-
-FMD Detection System
-Simba Farms
-"""
-
+    subject = f'FMD Detection System - {"⚠️ FMD Alert" if detection.result == "fmd" else "New Upload"}'
+    message = f"Uploaded By: {uploader_name}\nResult: {result_display}\nConfidence: {confidence}\nTime: {detection.uploaded_at.strftime('%Y-%m-%d %H:%M')}\n"
     notif_type = 'fmd_alert' if detection.result == 'fmd' else 'analysis_done'
     notif_title = f'{"⚠️ FMD Alert" if detection.result == "fmd" else "New Detection"} by {uploader_name}'
-
     for admin in admins:
         Notification.objects.create(
-            recipient=admin,
-            notification_type=notif_type,
-            title=notif_title,
+            recipient=admin, notification_type=notif_type, title=notif_title,
             message=f'Result: {result_display} | Confidence: {confidence} | By: {uploader_name}',
             detection=detection,
         )
         try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[admin.email],
-                fail_silently=True,
-            )
+            send_mail(subject=subject, message=message, from_email=settings.DEFAULT_FROM_EMAIL,
+                      recipient_list=[admin.email], fail_silently=True)
         except Exception as e:
             logger.error(f"Failed to notify admin {admin.email}: {e}")
 
@@ -535,45 +429,31 @@ def _save_annotated_image(detection):
     from PIL import Image, ImageDraw
     import io
     from django.core.files.base import ContentFile
-
     img = Image.open(detection.image.path).convert('RGB')
     draw = ImageDraw.Draw(img)
     img_w, img_h = img.size
-
     for box in detection.bounding_boxes:
-        cx = box.get('x', 0)
-        cy = box.get('y', 0)
-        bw = box.get('width', 0)
-        bh = box.get('height', 0)
+        cx, cy, bw, bh = box.get('x', 0), box.get('y', 0), box.get('width', 0), box.get('height', 0)
         conf = box.get('confidence', 0)
         label = f"FMD {conf:.1f}%"
-
-        x1 = max(0, int(cx - bw / 2))
-        y1 = max(0, int(cy - bh / 2))
-        x2 = min(img_w, int(cx + bw / 2))
-        y2 = min(img_h, int(cy + bh / 2))
-
+        x1, y1 = max(0, int(cx - bw / 2)), max(0, int(cy - bh / 2))
+        x2, y2 = min(img_w, int(cx + bw / 2)), min(img_h, int(cy + bh / 2))
         for t in range(3):
             draw.rectangle([x1 - t, y1 - t, x2 + t, y2 + t], outline='#DC2626')
-
         label_w = len(label) * 7 + 8
-        label_h = 18
-        draw.rectangle([x1, y1 - label_h, x1 + label_w, y1], fill='#DC2626')
-        draw.text((x1 + 4, y1 - label_h + 2), label, fill='white')
-
+        draw.rectangle([x1, y1 - 18, x1 + label_w, y1], fill='#DC2626')
+        draw.text((x1 + 4, y1 - 16), label, fill='white')
     buffer = io.BytesIO()
     img.save(buffer, format='JPEG', quality=90)
     buffer.seek(0)
-
     import os
-    orig_name = os.path.basename(detection.image.name)
-    annotated_name = f"annotated_{orig_name}"
+    annotated_name = f"annotated_{os.path.basename(detection.image.name)}"
     detection.annotated_image.save(annotated_name, ContentFile(buffer.read()), save=True)
 
 
 def update_statistics(detection):
     today = timezone.now().date()
-    stats, created = SystemStatistics.objects.get_or_create(date=today)
+    stats, _ = SystemStatistics.objects.get_or_create(date=today)
     stats.total_scans += 1
     if detection.result == 'fmd':
         stats.fmd_detected += 1
@@ -585,21 +465,16 @@ def update_statistics(detection):
 @login_required
 def history_view(request):
     detections = Detection.objects.filter(user=request.user).select_related('user')
-
     status_filter = request.GET.get('status')
+    result_filter = request.GET.get('result')
     if status_filter:
         detections = detections.filter(status=status_filter)
-    result_filter = request.GET.get('result')
     if result_filter:
         detections = detections.filter(result=result_filter)
-
-    context = {
-        'title': 'Detection History',
-        'detections': detections,
-        'status_filter': status_filter,
-        'result_filter': result_filter,
-    }
-    return render(request, 'dashboard/history.html', context)
+    return render(request, 'dashboard/history.html', {
+        'title': 'Detection History', 'detections': detections,
+        'status_filter': status_filter, 'result_filter': result_filter,
+    })
 
 
 @login_required
@@ -628,27 +503,17 @@ def generate_report_view(request, report_type):
     if report_type not in ['daily', 'weekly', 'monthly']:
         messages.error(request, 'Invalid report type.')
         return redirect('reports')
-
     try:
         from .reports import ReportGenerator
         generator = ReportGenerator(request.user, report_type)
         pdf = generator.generate()
         start_date, end_date, title = generator.get_date_range()
         data = generator.get_report_data(start_date, end_date)
-
-        Report.objects.create(
-            user=request.user,
-            report_type=report_type,
-            start_date=start_date,
-            end_date=end_date,
-            total_scans=data['total_scans'],
-            fmd_detected=data['fmd_detected'],
-            healthy_cattle=data['healthy_cattle'],
-        )
-
+        Report.objects.create(user=request.user, report_type=report_type, start_date=start_date,
+                              end_date=end_date, total_scans=data['total_scans'],
+                              fmd_detected=data['fmd_detected'], healthy_cattle=data['healthy_cattle'])
         response = HttpResponse(pdf, content_type='application/pdf')
-        filename = f'FMD_{report_type}_report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Disposition'] = f'attachment; filename="FMD_{report_type}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
         return response
     except Exception as e:
         messages.error(request, f'Error generating report: {str(e)}')
@@ -660,43 +525,28 @@ def email_report_view(request, report_type):
     if report_type not in ['daily', 'weekly', 'monthly']:
         messages.error(request, 'Invalid report type.')
         return redirect('reports')
-
     try:
         from .reports import ReportGenerator
         generator = ReportGenerator(request.user, report_type)
         pdf = generator.generate()
         start_date, end_date, title = generator.get_date_range()
         data = generator.get_report_data(start_date, end_date)
-
-        Report.objects.create(
-            user=request.user,
-            report_type=report_type,
-            start_date=start_date,
-            end_date=end_date,
-            total_scans=data['total_scans'],
-            fmd_detected=data['fmd_detected'],
-            healthy_cattle=data['healthy_cattle'],
-        )
-
+        Report.objects.create(user=request.user, report_type=report_type, start_date=start_date,
+                              end_date=end_date, total_scans=data['total_scans'],
+                              fmd_detected=data['fmd_detected'], healthy_cattle=data['healthy_cattle'])
         email = EmailMessage(
             subject=f'FMD Detection System - {title}',
-            body=f'Dear {request.user.get_full_name()},\n\nPlease find attached your {report_type} FMD detection report.\n\nBest regards,\nFMD Detection System',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[request.user.email],
+            body=f'Dear {request.user.get_full_name()},\n\nPlease find attached your {report_type} report.\n\nFMD Detection System',
+            from_email=settings.DEFAULT_FROM_EMAIL, to=[request.user.email],
         )
-        email.attach(f'FMD_{report_type}_report_{timezone.now().strftime("%Y%m%d")}.pdf', pdf, 'application/pdf')
+        email.attach(f'FMD_{report_type}_{timezone.now().strftime("%Y%m%d")}.pdf', pdf, 'application/pdf')
         email.send()
-
-        messages.success(request, f'Report has been sent to {request.user.email}!')
+        messages.success(request, f'Report sent to {request.user.email}!')
         return redirect('reports')
     except Exception as e:
         messages.error(request, f'Error sending report: {str(e)}')
         return redirect('reports')
 
-
-# ========================================
-# EMAIL TEST
-# ========================================
 
 @login_required
 @csrf_exempt
@@ -712,21 +562,10 @@ def test_email_config(request):
         'DEFAULT_FROM_EMAIL': settings.DEFAULT_FROM_EMAIL,
     }
     try:
-        result = send_mail(
-            'Test Email from FMD System',
-            'This is a test email to verify SMTP configuration.',
-            settings.DEFAULT_FROM_EMAIL,
-            [request.user.email],
-            fail_silently=False,
-        )
-        config['email_sent'] = True
-        config['result'] = f'{result} email(s) sent'
-        config['sent_to'] = request.user.email
+        result = send_mail('Test Email from FMD System', 'Test email.', settings.DEFAULT_FROM_EMAIL, [request.user.email], fail_silently=False)
+        config.update({'email_sent': True, 'result': f'{result} email(s) sent', 'sent_to': request.user.email})
     except Exception as e:
-        config['email_sent'] = False
-        config['error'] = str(e)
-        config['error_type'] = type(e).__name__
-
+        config.update({'email_sent': False, 'error': str(e), 'error_type': type(e).__name__})
     return JsonResponse(config, json_dumps_params={'indent': 2})
 
 
@@ -741,7 +580,6 @@ def _get_vets():
 @login_required
 def farmer_inbox_view(request):
     vets = _get_vets()
-
     selected_vet = None
     vet_id = request.GET.get('vet')
     if vet_id:
@@ -752,7 +590,6 @@ def farmer_inbox_view(request):
         body        = request.POST.get('body', '').strip()
         image       = request.FILES.get('image')
         reply_to_id = request.POST.get('reply_to')
-
         if vet_id_post and (body or image):
             vet = get_object_or_404(User, id=vet_id_post, profile__role='vet')
             reply_to = None
@@ -761,14 +598,7 @@ def farmer_inbox_view(request):
                     reply_to = DirectMessage.objects.get(id=reply_to_id)
                 except DirectMessage.DoesNotExist:
                     pass
-
-            DirectMessage.objects.create(
-                sender=request.user,
-                recipient=vet,
-                body=body,
-                image=image,
-                reply_to=reply_to,
-            )
+            DirectMessage.objects.create(sender=request.user, recipient=vet, body=body, image=image, reply_to=reply_to)
             return redirect(f"{request.path}?vet={vet_id_post}")
 
     thread = []
@@ -777,30 +607,18 @@ def farmer_inbox_view(request):
             Q(sender=request.user, recipient=selected_vet) |
             Q(sender=selected_vet, recipient=request.user)
         ).order_by('sent_at')
+        DirectMessage.objects.filter(sender=selected_vet, recipient=request.user, is_read=False).update(is_read=True)
 
-        DirectMessage.objects.filter(
-            sender=selected_vet, recipient=request.user, is_read=False
-        ).update(is_read=True)
-
-    sent_to_ids = list(DirectMessage.objects.filter(
-        sender=request.user
-    ).values_list('recipient_id', flat=True))
-
-    received_from_ids = list(DirectMessage.objects.filter(
-        recipient=request.user
-    ).values_list('sender_id', flat=True))
-
+    sent_to_ids      = list(DirectMessage.objects.filter(sender=request.user).values_list('recipient_id', flat=True))
+    received_from_ids = list(DirectMessage.objects.filter(recipient=request.user).values_list('sender_id', flat=True))
     messaged_vet_ids = set(sent_to_ids + received_from_ids)
     messaged_vets = User.objects.filter(id__in=messaged_vet_ids, profile__role='vet').select_related('profile')
     new_vets = vets.exclude(id__in=messaged_vet_ids)
 
     return render(request, 'dashboard/inbox.html', {
-        'title':         'Messages',
-        'vets':          vets,
-        'messaged_vets': messaged_vets,
-        'new_vets':      new_vets,
-        'selected_vet':  selected_vet,
-        'thread':        thread,
+        'title': 'Messages', 'vets': vets,
+        'messaged_vets': messaged_vets, 'new_vets': new_vets,
+        'selected_vet': selected_vet, 'thread': thread,
     })
 
 
@@ -815,7 +633,6 @@ def vet_inbox_view(request):
         image       = request.FILES.get('image')
         reply_to_id = request.POST.get('reply_to_id')
         farmer_id   = request.POST.get('farmer_id')
-
         if (body or image) and farmer_id:
             farmer = get_object_or_404(User, id=farmer_id)
             reply_to = None
@@ -824,29 +641,16 @@ def vet_inbox_view(request):
                     reply_to = DirectMessage.objects.get(id=reply_to_id)
                 except DirectMessage.DoesNotExist:
                     pass
-
-            DirectMessage.objects.create(
-                sender=request.user,
-                recipient=farmer,
-                body=body,
-                image=image,
-                reply_to=reply_to,
-            )
+            DirectMessage.objects.create(sender=request.user, recipient=farmer, body=body, image=image, reply_to=reply_to)
             messages.success(request, f'Reply sent to {farmer.get_full_name() or farmer.email}.')
         return redirect('vet_inbox')
 
     all_inbox = DirectMessage.objects.filter(
         recipient=request.user
     ).select_related('sender', 'sender__profile', 'reply_to').order_by('-sent_at')
-
     unread_count = all_inbox.filter(is_read=False).count()
     all_inbox.filter(is_read=False).update(is_read=True)
-
-    return render(request, 'vet/inbox.html', {
-        'title':        'Farmer Messages',
-        'all_inbox':    all_inbox,
-        'unread_count': unread_count,
-    })
+    return render(request, 'vet/inbox.html', {'title': 'Farmer Messages', 'all_inbox': all_inbox, 'unread_count': unread_count})
 
 
 # ========================================
@@ -857,13 +661,11 @@ def vet_inbox_view(request):
 def farmer_appointments_view(request):
     appts = Appointment.objects.filter(farmer=request.user).select_related('vet', 'vet__profile')
     vets  = _get_vets()
-
     if request.method == 'POST':
         vet_id   = request.POST.get('vet_id')
         pref_dt  = request.POST.get('preferred_date')
         reason   = request.POST.get('reason', '').strip()
         location = request.POST.get('location', '').strip()
-
         if not (vet_id and pref_dt and reason):
             messages.error(request, 'Please fill in all required fields.')
         else:
@@ -872,21 +674,10 @@ def farmer_appointments_view(request):
             if not dt:
                 messages.error(request, 'Invalid date/time.')
             else:
-                Appointment.objects.create(
-                    farmer=request.user,
-                    vet=vet,
-                    preferred_date=dt,
-                    reason=reason,
-                    location=location,
-                )
+                Appointment.objects.create(farmer=request.user, vet=vet, preferred_date=dt, reason=reason, location=location)
                 messages.success(request, f'Appointment request sent to Dr. {vet.get_full_name() or vet.email}. Awaiting approval.')
                 return redirect('farmer_appointments')
-
-    return render(request, 'dashboard/appointments.html', {
-        'title':        'My Appointments',
-        'appointments': appts,
-        'vets':         vets,
-    })
+    return render(request, 'dashboard/appointments.html', {'title': 'My Appointments', 'appointments': appts, 'vets': vets})
 
 
 @login_required
@@ -906,37 +697,35 @@ def farmer_cancel_appointment(request, appt_id):
 @login_required
 def vet_appointments_view(request):
     appts = Appointment.objects.filter(vet=request.user).select_related('farmer', 'farmer__profile')
-    return render(request, 'vet/appointments.html', {
-        'title':        'Appointment Requests',
-        'appointments': appts,
-    })
+    return render(request, 'vet/appointments.html', {'title': 'Appointment Requests', 'appointments': appts})
 
 
 @login_required
 def vet_respond_appointment(request, appt_id):
+    # Must be POST
     if request.method != 'POST':
         return redirect('vet_appointments')
 
-    appt   = get_object_or_404(Appointment, id=appt_id, vet=request.user)
+    appt = get_object_or_404(Appointment, id=appt_id, vet=request.user)
     action = request.POST.get('action', '').strip()
     notes  = request.POST.get('vet_notes', '').strip()
 
     if action == 'approve':
-        appt.status   = 'approved'
+        appt.status    = 'approved'
         appt.vet_notes = notes
         appt.save()
-        messages.success(request, f'Appointment with {appt.farmer.get_full_name() or appt.farmer.username} approved.')
+        messages.success(request, f'✅ Appointment with {appt.farmer.get_full_name() or appt.farmer.username} approved.')
     elif action == 'reject':
-        appt.status   = 'rejected'
+        appt.status    = 'rejected'
         appt.vet_notes = notes
         appt.save()
-        messages.warning(request, 'Appointment rejected.')
+        messages.warning(request, '❌ Appointment rejected.')
     elif action == 'complete':
         appt.status = 'completed'
         appt.save()
-        messages.success(request, 'Appointment marked as completed.')
+        messages.success(request, '✅ Appointment marked as completed.')
     else:
-        messages.error(request, 'Unknown action.')
+        messages.error(request, f'Unknown action: "{action}"')
 
     return redirect('vet_appointments')
 
@@ -950,40 +739,29 @@ def vaccination_list_view(request):
     records  = VaccinationRecord.objects.filter(farmer=request.user)
     overdue  = [r for r in records if r.is_overdue]
     due_soon = [r for r in records if r.due_soon and not r.is_overdue]
-
     return render(request, 'dashboard/vaccination.html', {
-        'title':     'FMD Vaccination History',
-        'records':   records,
-        'overdue':   overdue,
-        'due_soon':  due_soon,
+        'title': 'FMD Vaccination History', 'records': records, 'overdue': overdue, 'due_soon': due_soon,
     })
 
 
 @login_required
 def vaccination_add_view(request):
     if request.method == 'POST':
-        vaccine    = request.POST.get('vaccine_name', 'FMD Vaccine').strip()
-        batch      = request.POST.get('batch_number', '').strip()
         date_admin = request.POST.get('date_administered', '').strip()
-        next_due   = request.POST.get('next_due_date', '').strip() or None
-        admin_by   = request.POST.get('administered_by', '').strip()
-        notes      = request.POST.get('notes', '').strip()
-
         if not date_admin:
             messages.error(request, 'Date administered is required.')
         else:
             VaccinationRecord.objects.create(
                 farmer=request.user,
-                vaccine_name=vaccine or 'FMD Vaccine',
-                batch_number=batch,
+                vaccine_name=request.POST.get('vaccine_name', 'FMD Vaccine').strip() or 'FMD Vaccine',
+                batch_number=request.POST.get('batch_number', '').strip(),
                 date_administered=date_admin,
-                next_due_date=next_due,
-                administered_by=admin_by,
-                notes=notes,
+                next_due_date=request.POST.get('next_due_date', '').strip() or None,
+                administered_by=request.POST.get('administered_by', '').strip(),
+                notes=request.POST.get('notes', '').strip(),
             )
             messages.success(request, 'Vaccination record saved.')
             return redirect('vaccination_list')
-
     return render(request, 'dashboard/vaccination_add.html', {'title': 'Record Vaccination'})
 
 
@@ -993,6 +771,93 @@ def vaccination_delete_view(request, record_id):
     record.delete()
     messages.success(request, 'Record deleted.')
     return redirect('vaccination_list')
+
+
+# ========================================
+# MARKETPLACE
+# ========================================
+
+@login_required
+def marketplace_view(request):
+    listings = MarketListing.objects.filter(
+        is_active=True
+    ).select_related('seller', 'seller__profile').prefetch_related('comments')
+    search = request.GET.get('q', '').strip()
+    if search:
+        listings = listings.filter(
+            Q(title__icontains=search) | Q(description__icontains=search) | Q(location__icontains=search)
+        )
+    return render(request, 'marketplace/marketplace.html', {'title': 'Cattle Marketplace', 'listings': listings, 'search': search})
+
+
+@login_required
+def marketplace_listing_detail(request, listing_id):
+    listing  = get_object_or_404(MarketListing, id=listing_id)
+    comments = listing.comments.select_related('author', 'author__profile', 'reply_to')
+    if request.method == 'POST':
+        body = request.POST.get('body', '').strip()
+        if body:
+            reply_to = None
+            reply_to_id = request.POST.get('reply_to_id', '').strip()
+            if reply_to_id:
+                try:
+                    reply_to = MarketComment.objects.get(id=reply_to_id)
+                except MarketComment.DoesNotExist:
+                    pass
+            MarketComment.objects.create(listing=listing, author=request.user, body=body, reply_to=reply_to)
+            messages.success(request, 'Comment posted.')
+        return redirect('marketplace_detail', listing_id=listing_id)
+    return render(request, 'marketplace/listing_detail.html', {'title': listing.title, 'listing': listing, 'comments': comments})
+
+
+@login_required
+def marketplace_create(request):
+    if request.method == 'POST':
+        title    = request.POST.get('title', 'Cow for Sale').strip()
+        desc     = request.POST.get('description', '').strip()
+        price    = request.POST.get('price', '').strip()
+        currency = request.POST.get('currency', 'UGX').strip()
+        phone    = request.POST.get('phone', '').strip()
+        location = request.POST.get('location', '').strip()
+        image    = request.FILES.get('image')
+        errors = []
+        if not image:   errors.append('Please upload a cow image.')
+        if not price:   errors.append('Please enter a price.')
+        if not phone:   errors.append('Please enter a contact phone number.')
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            try:
+                price_val = float(price.replace(',', ''))
+                MarketListing.objects.create(
+                    seller=request.user, image=image, title=title,
+                    description=desc, price=price_val, currency=currency,
+                    phone=phone, location=location,
+                )
+                messages.success(request, 'Your listing has been posted to the marketplace!')
+                return redirect('marketplace')
+            except ValueError:
+                messages.error(request, 'Invalid price format.')
+    return render(request, 'marketplace/create_listing.html', {'title': 'Post a Listing'})
+
+
+@login_required
+def marketplace_delete(request, listing_id):
+    listing = get_object_or_404(MarketListing, id=listing_id, seller=request.user)
+    listing.delete()
+    messages.success(request, 'Listing removed.')
+    return redirect('marketplace')
+
+
+@login_required
+def marketplace_toggle(request, listing_id):
+    listing = get_object_or_404(MarketListing, id=listing_id, seller=request.user)
+    listing.is_active = not listing.is_active
+    listing.save()
+    status = 'active' if listing.is_active else 'marked as sold'
+    messages.success(request, f'Listing {status}.')
+    return redirect('marketplace_detail', listing_id=listing_id)
 
 
 # ========================================

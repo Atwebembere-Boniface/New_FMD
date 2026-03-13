@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+
+  {% if request.user.profile.role == 'vet' %}
+    {% include 'partials/vet_sidebar.html' %}
+  {% else %}
+    {% include 'partials/sidebar.html' %}
+  {% endif %}
+
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#FFFBEB;min-height:100vh;">
+
+    <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-3">
+      <a href="{% url 'marketplace' %}" class="btn btn-sm"
+         style="background:#FEF3C7;color:#92400E;border:none;border-radius:8px;">
+        <i class="fas fa-arrow-left me-1"></i>Back
+      </a>
+      <div>
+        <h5 class="mb-0 fw-bold" style="color:#92400E;">Post a Cow for Sale</h5>
+        <small class="text-muted">Your listing will be visible to all farmers and vets</small>
+      </div>
+    </div>
+
+    <div class="container py-4" style="max-width:600px;">
+
+      {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Image upload -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">
+                Cow Photo <span class="text-danger">*</span>
+              </label>
+              <div id="dropZone"
+                   onclick="document.getElementById('imgInput').click()"
+                   style="border:2px dashed #FDE68A;border-radius:12px;padding:30px;text-align:center;cursor:pointer;background:#FFFBEB;transition:all .2s;"
+                   onmouseover="this.style.borderColor='#D97706'"
+                   onmouseout="this.style.borderColor='#FDE68A'">
+                <div id="dropLabel">
+                  <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color:#D97706;"></i>
+                  <p class="mb-0" style="font-size:13px;color:#78716C;">Click to upload a photo of your cow</p>
+                  <small style="color:#A8A29E;">JPG, PNG — clear image gets more interest</small>
+                </div>
+                <img id="imgPreview" src="#" alt="Preview"
+                     style="display:none;max-height:200px;border-radius:8px;margin-top:10px;">
+              </div>
+              <input type="file" id="imgInput" name="image" accept="image/*"
+                     class="d-none" onchange="previewImage(this)" required>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">Listing Title</label>
+              <input type="text" name="title" class="form-control"
+                     style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;"
+                     placeholder="e.g. Healthy Friesian Cow, 5 Years Old"
+                     value="Cow for Sale">
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">Description</label>
+              <textarea name="description" rows="3" class="form-control"
+                        style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;resize:none;"
+                        placeholder="Breed, age, health status, milk production, reason for selling…"></textarea>
+            </div>
+
+            <!-- Price + Currency -->
+            <div class="row g-3 mb-3">
+              <div class="col-8">
+                <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">
+                  Price <span class="text-danger">*</span>
+                </label>
+                <input type="number" name="price" class="form-control"
+                       style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;"
+                       placeholder="e.g. 1500000" min="0" step="1000" required>
+              </div>
+              <div class="col-4">
+                <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">Currency</label>
+                <select name="currency" class="form-select"
+                        style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;">
+                  <option value="UGX" selected>UGX</option>
+                  <option value="USD">USD</option>
+                  <option value="KES">KES</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">
+                Contact Phone <span class="text-danger">*</span>
+              </label>
+              <input type="tel" name="phone" class="form-control"
+                     style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;"
+                     placeholder="e.g. +256 700 123456" required>
+              <small class="text-muted" style="font-size:11px;">Interested buyers will call or WhatsApp this number.</small>
+            </div>
+
+            <!-- Location -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold" style="color:#44403C;font-size:13px;">Location</label>
+              <input type="text" name="location" class="form-control"
+                     style="border-radius:10px;border:1px solid #FDE68A;font-size:13px;"
+                     placeholder="e.g. Ibanda Town, Ruhama Sub-county">
+            </div>
+
+            <button type="submit" class="btn w-100 fw-bold py-2"
+                    style="background:linear-gradient(135deg,#D97706,#F59E0B);color:white;border:none;border-radius:12px;font-size:14px;">
+              <i class="fas fa-store me-2"></i>Post to Marketplace
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('imgPreview');
+      const label   = document.getElementById('dropLabel');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      label.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

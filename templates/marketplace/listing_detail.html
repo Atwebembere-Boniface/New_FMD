@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex">
+
+  {% if request.user.profile.role == 'vet' %}
+    {% include 'partials/vet_sidebar.html' %}
+  {% else %}
+    {% include 'partials/sidebar.html' %}
+  {% endif %}
+
+  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#FFFBEB;min-height:100vh;">
+
+    <!-- Header -->
+    <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-3">
+      <a href="{% url 'marketplace' %}" class="btn btn-sm"
+         style="background:#FEF3C7;color:#92400E;border:none;border-radius:8px;">
+        <i class="fas fa-arrow-left me-1"></i>Back
+      </a>
+      <div>
+        <h5 class="mb-0 fw-bold" style="color:#92400E;">{{ listing.title }}</h5>
+        <small class="text-muted">Posted {{ listing.created_at|timesince }} ago by {{ listing.seller.get_full_name|default:listing.seller.username }}</small>
+      </div>
+    </div>
+
+    <div class="container-fluid p-4">
+      <div class="row g-4">
+
+        <!-- LEFT: Image + Details -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
+
+            <!-- Image -->
+            <div style="position:relative;">
+              <img src="{{ listing.image.url }}" alt="{{ listing.title }}"
+                   style="width:100%;max-height:380px;object-fit:cover;">
+              {% if not listing.is_active %}
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
+                <span style="background:#EF4444;color:white;font-size:22px;font-weight:700;padding:10px 30px;border-radius:12px;">SOLD</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="p-4">
+              <!-- Price -->
+              <div class="mb-3 p-3 rounded-3 text-center"
+                   style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);">
+                <div style="font-size:11px;color:#92400E;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Price</div>
+                <div style="font-size:28px;font-weight:800;color:#D97706;">
+                  {{ listing.currency }} {{ listing.price|floatformat:0 }}
+                </div>
+              </div>
+
+              <!-- Details -->
+              <div class="d-flex flex-column gap-2" style="font-size:13px;">
+                <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#F5F5F4;">
+                  <i class="fas fa-user" style="color:#D97706;width:16px;"></i>
+                  <span>
+                    <strong>Seller:</strong>
+                    {{ listing.seller.get_full_name|default:listing.seller.username }}
+                  </span>
+                </div>
+                <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#F5F5F4;">
+                  <i class="fas fa-phone" style="color:#D97706;width:16px;"></i>
+                  <span>
+                    <strong>Contact:</strong>
+                    <a href="tel:{{ listing.phone }}" style="color:#D97706;">{{ listing.phone }}</a>
+                  </span>
+                </div>
+                {% if listing.location %}
+                <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#F5F5F4;">
+                  <i class="fas fa-map-marker-alt" style="color:#D97706;width:16px;"></i>
+                  <span><strong>Location:</strong> {{ listing.location }}</span>
+                </div>
+                {% endif %}
+                <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#F5F5F4;">
+                  <i class="fas fa-calendar" style="color:#D97706;width:16px;"></i>
+                  <span><strong>Posted:</strong> {{ listing.created_at|date:"M d, Y" }}</span>
+                </div>
+              </div>
+
+              {% if listing.description %}
+              <div class="mt-3 p-3 rounded-3" style="background:#FFFBEB;border:1px solid #FDE68A;">
+                <div style="font-size:11px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Description</div>
+                <p style="font-size:13px;margin:0;line-height:1.6;color:#44403C;">{{ listing.description }}</p>
+              </div>
+              {% endif %}
+
+              <!-- Seller controls -->
+              {% if listing.seller == request.user %}
+              <div class="d-flex gap-2 mt-3">
+                <a href="{% url 'marketplace_toggle' listing.id %}"
+                   class="btn btn-sm flex-fill fw-semibold"
+                   style="background:#FEF3C7;color:#92400E;border:none;border-radius:8px;font-size:12px;">
+                  {% if listing.is_active %}<i class="fas fa-check me-1"></i>Mark as Sold
+                  {% else %}<i class="fas fa-redo me-1"></i>Relist{% endif %}
+                </a>
+                <a href="{% url 'marketplace_delete' listing.id %}"
+                   class="btn btn-sm fw-semibold"
+                   style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;font-size:12px;"
+                   onclick="return confirm('Delete this listing permanently?')">
+                  <i class="fas fa-trash me-1"></i>Delete
+                </a>
+              </div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Comments / Chat -->
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm d-flex flex-column"
+               style="border-radius:16px;overflow:hidden;height:100%;min-height:500px;">
+
+            <div class="p-3 border-bottom" style="background:#FFFBEB;">
+              <h6 class="mb-0 fw-bold" style="color:#92400E;">
+                <i class="fas fa-comments me-2"></i>
+                Discussion ({{ comments|length }} comment{{ comments|length|pluralize }})
+              </h6>
+            </div>
+
+            <!-- Comments list -->
+            <div id="commentBox"
+                 style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:300px;max-height:450px;">
+
+              {% if not comments %}
+              <div class="text-center py-4 text-muted" style="font-size:13px;">
+                <i class="fas fa-comments fa-2x mb-2" style="color:#FDE68A;"></i><br>
+                No comments yet. Be the first to ask about this cow!
+              </div>
+              {% endif %}
+
+              {% for comment in comments %}
+              <div class="{% if comment.author == request.user %}d-flex justify-content-end{% else %}d-flex justify-content-start{% endif %}">
+                <div style="max-width:78%;">
+
+                  {% if comment.reply_to %}
+                  <div class="mb-1 px-2 py-1 rounded-3"
+                       style="background:#F5F5F4;border-left:3px solid #D97706;font-size:11px;color:#78716C;">
+                    <i class="fas fa-reply me-1"></i>
+                    <strong>{{ comment.reply_to.author.get_full_name|default:comment.reply_to.author.username }}:</strong>
+                    {{ comment.reply_to.body|truncatechars:60 }}
+                  </div>
+                  {% endif %}
+
+                  <div class="px-3 py-2
+                    {% if comment.author == request.user %}
+                      text-white
+                    {% endif %}"
+                    style="
+                      {% if comment.author == request.user %}
+                        background:#D97706;border-radius:18px 18px 4px 18px;
+                      {% else %}
+                        background:white;border:1px solid #E7E5E4;border-radius:18px 18px 18px 4px;
+                      {% endif %}
+                      font-size:13px;line-height:1.6;">
+                    {% if comment.author != request.user %}
+                    <div style="font-size:11px;font-weight:700;color:#D97706;margin-bottom:2px;">
+                      {{ comment.author.get_full_name|default:comment.author.username }}
+                      {% if comment.author == listing.seller %}
+                      <span class="badge ms-1" style="background:#FEF3C7;color:#92400E;font-size:9px;">Seller</span>
+                      {% endif %}
+                    </div>
+                    {% endif %}
+                    {{ comment.body }}
+                  </div>
+
+                  <div class="mt-1 d-flex align-items-center gap-2
+                    {% if comment.author == request.user %}justify-content-end{% endif %}">
+                    <span style="font-size:10px;color:#A8A29E;">{{ comment.created_at|date:"M d, H:i" }}</span>
+                    <button type="button"
+                            onclick="setReply('{{ comment.id }}', '{{ comment.author.get_full_name|default:comment.author.username }}', '{{ comment.body|truncatechars:40|escapejs }}')"
+                            style="background:none;border:none;font-size:10px;color:#D97706;cursor:pointer;padding:0;">
+                      <i class="fas fa-reply me-1"></i>Reply
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Comment box -->
+            <div class="border-top p-3" style="background:white;">
+
+              <!-- Reply preview -->
+              <div id="replyPreview" class="mb-2 px-3 py-2 rounded-3 d-none"
+                   style="background:#FEF3C7;font-size:12px;color:#92400E;border-left:3px solid #D97706;">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span id="replyLabel"></span>
+                  <button type="button" onclick="clearReply()"
+                          style="background:none;border:none;color:#92400E;font-size:12px;cursor:pointer;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+
+              <form method="post" id="commentForm">
+                {% csrf_token %}
+                <input type="hidden" name="reply_to_id" id="replyToId">
+                <div class="d-flex align-items-end gap-2">
+                  <textarea name="body" rows="1"
+                            placeholder="Ask a question or leave a comment…"
+                            class="form-control border-0 rounded-pill px-4"
+                            style="resize:none;background:#F5F5F4;font-size:13px;min-height:40px;max-height:100px;overflow:hidden;"
+                            oninput="autoResize(this)"
+                            onkeydown="submitOnEnter(event)"
+                            required></textarea>
+                  <button type="submit" class="btn flex-shrink-0"
+                          style="background:#D97706;color:white;border:none;border-radius:50%;width:40px;height:40px;">
+                    <i class="fas fa-paper-plane" style="font-size:13px;"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Scroll to bottom of comments
+const cb = document.getElementById('commentBox');
+if (cb) cb.scrollTop = cb.scrollHeight;
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+function submitOnEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('commentForm').submit();
+  }
+}
+function setReply(id, author, preview) {
+  document.getElementById('replyToId').value = id;
+  document.getElementById('replyLabel').innerHTML =
+    '<i class="fas fa-reply me-1"></i>Replying to <strong>' + author + '</strong>: ' + preview;
+  document.getElementById('replyPreview').classList.remove('d-none');
+  document.querySelector('textarea[name="body"]').focus();
+}
+function clearReply() {
+  document.getElementById('replyToId').value = '';
+  document.getElementById('replyPreview').classList.add('d-none');
+}
+</script>
+{% endblock %}

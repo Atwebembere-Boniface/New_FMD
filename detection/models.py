@@ -329,3 +329,48 @@ class VaccinationRecord(models.Model):
             delta = self.next_due_date - timezone.now().date()
             return 0 <= delta.days <= 30
         return False
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Add these two models to the bottom of detection/models.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+import uuid
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class MarketListing(models.Model):
+    id          = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    seller      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='market_listings')
+    image       = models.ImageField(upload_to='marketplace/%Y/%m/%d/')
+    title       = models.CharField(max_length=200, default='Cow for Sale')
+    description = models.TextField(blank=True)
+    price       = models.DecimalField(max_digits=12, decimal_places=2)
+    currency    = models.CharField(max_length=10, default='UGX')
+    phone       = models.CharField(max_length=30)
+    location    = models.CharField(max_length=200, blank=True)
+    is_active   = models.BooleanField(default=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} — {self.currency} {self.price} ({self.seller.get_full_name() or self.seller.email})"
+
+
+class MarketComment(models.Model):
+    id         = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    listing    = models.ForeignKey(MarketListing, on_delete=models.CASCADE, related_name='comments')
+    author     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='market_comments')
+    body       = models.TextField()
+    reply_to   = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author.get_full_name() or self.author.email} on {self.listing.title}"
