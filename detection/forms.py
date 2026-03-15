@@ -4,99 +4,78 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Detection
 
 
-class UserRegistrationForm(UserCreationForm):
-    """Custom user registration form — full name, email, phone, password fields"""
+class UserRegistrationForm(forms.Form):
+    ROLE_CHOICES = [
+        ('farmer', '🌾 Farmer — I want to scan my cattle for FMD'),
+        ('vet',    '🩺 Veterinary Doctor — I provide veterinary services'),
+    ]
 
-    full_name = forms.CharField(
-        max_length=100,
-        required=True,
-        label='Full Name',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter your full name'
-        })
+    first_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'placeholder': 'First Name', 'class': 'form-control'}),
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'placeholder': 'Last Name', 'class': 'form-control'}),
     )
     email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter your email address'
-        })
+        widget=forms.EmailInput(attrs={'placeholder': 'Email Address', 'class': 'form-control'}),
     )
-    phone_number = forms.CharField(
-        max_length=15,
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'role-radio'}),
+        initial='farmer',
+    )
+    # Vet-only optional field
+    license_number = forms.CharField(
+        max_length=100,
         required=False,
-        label='Phone Number',
         widget=forms.TextInput(attrs={
+            'placeholder': 'Veterinary License Number (optional)',
             'class': 'form-control',
-            'placeholder': 'Phone Number (optional)'
-        })
+        }),
     )
-    farm_name = forms.CharField(
-        max_length=100,
-        initial='Simba Farms',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Farm Name'
-        })
+    password = forms.CharField(
+        min_length=8,
+        widget=forms.PasswordInput(attrs={'placeholder': 'Password (min 8 chars)', 'class': 'form-control'}),
     )
-    location = forms.CharField(
-        max_length=100,
-        initial='Ibanda District',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Location'
-        })
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password', 'class': 'form-control'}),
     )
-
-    class Meta:
-        model = User
-        fields = ['full_name', 'email', 'phone_number', 'password1', 'password2']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Remove username field from parent
-        if 'username' in self.fields:
-            del self.fields['username']
-        self.fields['password1'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Create password'
-        })
-        self.fields['password2'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Confirm password'
-        })
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError('This email is already registered.')
+        email = self.cleaned_data['email'].lower()
+        if User.objects.filter(username=email).exists():
+            raise forms.ValidationError('An account with this email already exists.')
         return email
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        full_name = self.cleaned_data['full_name'].strip()
-        parts = full_name.split(' ', 1)
-        user.first_name = parts[0]
-        user.last_name = parts[1] if len(parts) > 1 else ''
-        user.email = self.cleaned_data['email']
-        # Use email as username (unique)
-        base_username = self.cleaned_data['email'].split('@')[0]
-        username = base_username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
-        user.username = username
+    def clean(self):
+        cleaned = super().clean()
+        pwd  = cleaned.get('password')
+        cpwd = cleaned.get('confirm_password')
+        if pwd and cpwd and pwd != cpwd:
+            self.add_error('confirm_password', 'Passwords do not match.')
+        return cleaned
 
-        if commit:
-            user.save()
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.phone_number = self.cleaned_data.get('phone_number', '')
-            profile.farm_name = self.cleaned_data.get('farm_name', 'Simba Farms')
-            profile.location = self.cleaned_data.get('location', 'Ibanda District')
-            profile.role = 'farmer'
-            profile.save()
+    def save(self):
+        data  = self.cleaned_data
+        role  = data['role']
+        email = data['email'].lower()
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=data['password'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+        )
+
+        # UserProfile is created via signal — just set the role
+        profile = user.profile
+        profile.role = role
+        if role == 'vet' and data.get('license_number'):
+            profile.license_number = data['license_number']
+        profile.save()
 
         return user
 

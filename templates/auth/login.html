@@ -30,9 +30,9 @@
 
                             <!-- Email -->
                             <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Email Address</label>
+                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #15803D; font-weight: 600;">Email Address</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light" style="border-color: #1E3A8A;">
+                                    <span class="input-group-text bg-light" style="border-color: #15803D;">
                                         <i class="fas fa-envelope" style="color: #FB923C;"></i>
                                     </span>
                                     {{ form.username }}
@@ -42,14 +42,22 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Password -->
+                            <!-- Password with show/hide toggle -->
                             <div class="mb-4">
-                                <label for="{{ form.password.id_for_label }}" class="form-label" style="color: #1E3A8A; font-weight: 600;">Password</label>
+                                <label for="{{ form.password.id_for_label }}" class="form-label" style="color: #15803D; font-weight: 600;">Password</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light" style="border-color: #1E3A8A;">
+                                    <span class="input-group-text bg-light" style="border-color: #15803D;">
                                         <i class="fas fa-lock" style="color: #FB923C;"></i>
                                     </span>
                                     {{ form.password }}
+                                    <button type="button"
+                                            id="togglePasswordBtn"
+                                            onclick="togglePassword()"
+                                            class="input-group-text bg-light"
+                                            style="border-color: #15803D; cursor: pointer; border-left: none;"
+                                            title="Show / hide password">
+                                        <i class="fas fa-eye" id="toggleIcon" style="color: #15803D; font-size: 14px;"></i>
+                                    </button>
                                 </div>
                                 {% if form.password.errors %}
                                     <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
@@ -61,10 +69,11 @@
                                     <input type="checkbox" class="form-check-input" id="remember">
                                     <label class="form-check-label" for="remember" style="font-size:13px;">Remember me</label>
                                 </div>
-                                <a href="{% url 'password_reset' %}" class="text-decoration-none" style="font-size:13px;color:#1E3A8A;">Forgot Password?</a>
+                                <a href="{% url 'password_reset' %}" class="text-decoration-none" style="font-size:13px;color:#15803D;">Forgot Password?</a>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold" style="background: linear-gradient(90deg, #1E3A8A 0%, #FB923C 100%); border: none;">
+                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold"
+                                    style="background: linear-gradient(90deg, #15803D 0%, #FB923C 100%); border: none;">
                                 Login to Dashboard
                                 <i class="fas fa-arrow-right ms-2"></i>
                             </button>
@@ -85,10 +94,38 @@
 <style>
 .auth-wrapper {
     min-height: 100vh;
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.85) 100%),
+    background: linear-gradient(135deg, rgba(21, 128, 61, 0.9) 0%, rgba(22, 101, 52, 0.85) 100%),
                 url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
     background-attachment: fixed;
 }
 .auth-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+
+/* Keep the eye button visually flush with the password field */
+#togglePasswordBtn:focus {
+    box-shadow: none;
+    outline: none;
+}
+#togglePasswordBtn:hover {
+    background-color: #F0FDF4 !important;
+}
 </style>
+
+<script>
+function togglePassword() {
+    const field = document.getElementById('{{ form.password.id_for_label }}');
+    const icon  = document.getElementById('toggleIcon');
+
+    if (!field) return;
+
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+        icon.style.color = '#FB923C';
+    } else {
+        field.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+        icon.style.color = '#15803D';
+    }
+}
+</script>
 {% endblock %}
