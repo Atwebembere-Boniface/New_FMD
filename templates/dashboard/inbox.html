@@ -1,192 +1,409 @@
 {% extends 'base.html' %}
-{% block content %}
-<div class="d-flex">
-  {% include 'partials/sidebar.html' %}
-  <div class="main-content" style="margin-left:250px;width:calc(100% - 250px);background:#F0F9FF;min-height:100vh;">
 
-    <div class="bg-white border-bottom px-4 py-3">
-      <h4 class="mb-0 fw-bold" style="color:#1E3A8A;">Messages</h4>
+{% block content %}
+
+<!-- Mobile topbar -->
+<div class="fmd-mobile-topbar">
+  <div class="d-flex align-items-center gap-2">
+    {% if selected_vet %}
+    <button onclick="showVetList()" class="fmd-back-btn" aria-label="Back">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <span class="fw-semibold" style="color:#15803D;font-size:14px;">
+      Dr. {{ selected_vet.get_full_name|default:selected_vet.email|truncatechars:22 }}
+    </span>
+    {% else %}
+    <div style="width:32px;height:32px;background:#15803D;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-comments" style="color:white;font-size:13px;"></i>
+    </div>
+    <span class="fw-bold" style="color:#15803D;font-size:14px;">Messages</span>
+    {% endif %}
+  </div>
+  <button class="fmd-burger-btn" onclick="openFarmerSidebar()" aria-label="Open menu">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+<!-- Sidebar backdrop -->
+<div id="farmerOverlay" class="fmd-backdrop" onclick="closeFarmerSidebar()"></div>
+
+{% include 'partials/sidebar.html' %}
+
+<!-- ══════════════════════════════════════════════════
+     MAIN LAYOUT
+     Desktop: sidebar(250px) + contacts(280px) + thread(flex)
+     Mobile:  full-width contacts OR full-width thread
+══════════════════════════════════════════════════ -->
+<div class="fmd-main-content">
+
+  <div class="inbox-shell" style="height:calc(100vh - 0px);">
+
+    <!-- ── Page header (desktop only) ── -->
+    <div class="bg-white border-bottom px-4 py-3 d-none d-md-block">
+      <h4 class="mb-0 fw-bold" style="color:#15803D;">Messages</h4>
       <small class="text-muted">Chat with your veterinary doctor</small>
     </div>
 
-    <div class="d-flex" style="height:calc(100vh - 65px);">
+    <div class="inbox-body">
 
-      <!-- LEFT: vet list -->
-      <div style="width:280px;flex-shrink:0;border-right:1px solid #E2E8F0;background:white;overflow-y:auto;">
+      <!-- ════════════════════════
+           LEFT: Vet list
+      ════════════════════════ -->
+      <div class="inbox-contacts" id="vetListPanel">
 
+        <div class="contacts-header d-md-none">
+          <h6 class="mb-0 fw-bold" style="color:#15803D;">Messages</h6>
+          <small class="text-muted">Select a vet to chat</small>
+        </div>
+
+        <!-- New conversations -->
         {% if new_vets %}
-        <div class="px-3 pt-3 pb-1">
-          <p class="text-muted mb-2" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">New Conversation</p>
+        <div class="contacts-section">
+          <p class="contacts-label">New Conversation</p>
           {% for vet in new_vets %}
-          <a href="?vet={{ vet.id }}"
-             class="d-flex align-items-center px-3 py-2 mb-1 rounded-3 text-decoration-none"
-             style="background:{% if selected_vet and selected_vet.id == vet.id %}#EFF6FF{% else %}#F8FAFC{% endif %};">
-            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
-                 style="width:38px;height:38px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;font-size:14px;">
+          <a href="?vet={{ vet.id }}" class="contact-item {% if selected_vet and selected_vet.id == vet.id %}active{% endif %}"
+             onclick="showThread()">
+            <div class="contact-avatar" style="background:linear-gradient(135deg,#15803D,#166534);">
               {{ vet.get_full_name|default:vet.email|first|upper }}
             </div>
-            <div>
-              <div class="fw-semibold" style="color:#1E3A8A;font-size:13px;">Dr. {{ vet.get_full_name|default:vet.email }}</div>
-              <div class="text-muted" style="font-size:11px;">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
+            <div class="contact-info">
+              <div class="contact-name">Dr. {{ vet.get_full_name|default:vet.email }}</div>
+              <div class="contact-sub">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
             </div>
           </a>
           {% endfor %}
         </div>
-        <hr class="mx-3 my-2">
+        <hr class="mx-3 my-1">
         {% endif %}
 
+        <!-- Recent -->
         {% if messaged_vets %}
-        <div class="px-3 pt-1 pb-1">
-          <p class="text-muted mb-2" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Recent</p>
+        <div class="contacts-section">
+          <p class="contacts-label">Recent</p>
           {% for vet in messaged_vets %}
-          <a href="?vet={{ vet.id }}"
-             class="d-flex align-items-center px-3 py-2 mb-1 rounded-3 text-decoration-none"
-             style="background:{% if selected_vet and selected_vet.id == vet.id %}#EFF6FF{% else %}white{% endif %};">
-            <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
-                 style="width:38px;height:38px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;font-size:14px;">
+          <a href="?vet={{ vet.id }}" class="contact-item {% if selected_vet and selected_vet.id == vet.id %}active{% endif %}"
+             onclick="showThread()">
+            <div class="contact-avatar" style="background:linear-gradient(135deg,#15803D,#166534);">
               {{ vet.get_full_name|default:vet.email|first|upper }}
             </div>
-            <div class="flex-grow-1">
-              <div class="fw-semibold" style="color:#1E3A8A;font-size:13px;">Dr. {{ vet.get_full_name|default:vet.email }}</div>
-              <div class="text-muted" style="font-size:11px;">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
+            <div class="contact-info">
+              <div class="contact-name">Dr. {{ vet.get_full_name|default:vet.email }}</div>
+              <div class="contact-sub">{{ vet.profile.specialization|default:"Veterinary Doctor" }}</div>
             </div>
           </a>
           {% endfor %}
         </div>
         {% endif %}
 
-        {% if not messaged_vets and not new_vets %}
-        <div class="text-center py-5 text-muted px-3" style="font-size:13px;">
-          <i class="fas fa-user-md fa-2x mb-2" style="color:#CBD5E1;"></i><br>
-          No veterinary doctors registered yet.
+        {% if not new_vets and not messaged_vets %}
+        <div class="text-center py-5 px-3 text-muted" style="font-size:13px;">
+          <i class="fas fa-user-md fa-2x mb-3" style="color:#D1FAE5;"></i><br>
+          No veterinary doctors available yet.
         </div>
         {% endif %}
       </div>
 
-      <!-- RIGHT: message thread -->
-      <div class="flex-grow-1 d-flex flex-column" style="overflow:hidden;">
+      <!-- ════════════════════════
+           RIGHT: Thread
+      ════════════════════════ -->
+      <div class="inbox-thread {% if selected_vet %}thread-visible{% endif %}" id="threadPanel">
+
         {% if selected_vet %}
 
-          <!-- Thread header -->
-          <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center" style="flex-shrink:0;">
-            <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
-                 style="width:40px;height:40px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);color:white;font-weight:700;">
+          <!-- Thread header (desktop) -->
+          <div class="thread-header d-none d-md-flex align-items-center gap-3">
+            <div class="contact-avatar" style="background:linear-gradient(135deg,#15803D,#166534);width:40px;height:40px;font-size:15px;">
               {{ selected_vet.get_full_name|default:selected_vet.email|first|upper }}
             </div>
             <div>
-              <div class="fw-bold" style="color:#1E3A8A;">Dr. {{ selected_vet.get_full_name|default:selected_vet.email }}</div>
+              <div class="fw-bold" style="color:#15803D;">Dr. {{ selected_vet.get_full_name|default:selected_vet.email }}</div>
               <small class="text-muted">{{ selected_vet.profile.specialization|default:"Veterinary Doctor" }}</small>
             </div>
           </div>
 
           <!-- Messages -->
-          <div id="chatBox" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div class="thread-messages" id="chatBox">
             {% if not thread %}
             <div class="text-center text-muted py-5" style="font-size:13px;">
-              <i class="fas fa-comments fa-2x mb-2" style="color:#CBD5E1;"></i><br>
-              Start the conversation — describe your animal's condition or ask a question.
+              <i class="fas fa-comments fa-2x mb-2" style="color:#D1FAE5;"></i><br>
+              Start the conversation — describe your animal's condition.
             </div>
             {% endif %}
             {% for msg in thread %}
               {% if msg.sender == request.user %}
-              <!-- Farmer message (right) -->
-              <div class="d-flex justify-content-end">
-                <div style="max-width:68%;">
-                  {% if msg.image %}
-                  <div class="mb-1 text-end">
-                    <img src="{{ msg.image.url }}" style="max-width:200px;border-radius:12px 12px 2px 12px;">
-                  </div>
-                  {% endif %}
-                  {% if msg.body %}
-                  <div class="px-3 py-2 text-white"
-                       style="background:#1E3A8A;border-radius:18px 18px 4px 18px;font-size:13px;line-height:1.6;">
-                    {{ msg.body }}
-                  </div>
-                  {% endif %}
-                  <div class="text-end mt-1" style="font-size:11px;color:#94A3B8;">
-                    {{ msg.sent_at|date:"M d, H:i" }}
-                  </div>
+              <div class="msg-row msg-right">
+                <div class="msg-bubble msg-bubble-me">
+                  {% if msg.image %}<img src="{{ msg.image.url }}" class="msg-img">{% endif %}
+                  {% if msg.body %}<span>{{ msg.body }}</span>{% endif %}
+                  <div class="msg-time">{{ msg.sent_at|date:"M d, H:i" }}</div>
                 </div>
               </div>
               {% else %}
-              <!-- Vet reply (left) -->
-              <div class="d-flex justify-content-start align-items-end gap-2">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                     style="width:30px;height:30px;background:#DCFCE7;color:#16A34A;font-weight:700;font-size:11px;">
-                  Dr
-                </div>
-                <div style="max-width:68%;">
-                  {% if msg.image %}
-                  <div class="mb-1">
-                    <img src="{{ msg.image.url }}" style="max-width:200px;border-radius:12px 12px 12px 2px;">
-                  </div>
-                  {% endif %}
+              <div class="msg-row msg-left">
+                <div class="msg-avatar-sm">Dr</div>
+                <div>
+                  {% if msg.image %}<img src="{{ msg.image.url }}" class="msg-img msg-img-left">{% endif %}
                   {% if msg.body %}
-                  <div class="px-3 py-2"
-                       style="background:white;border:1px solid #E2E8F0;border-radius:18px 18px 18px 4px;font-size:13px;line-height:1.6;color:#1E293B;">
-                    {{ msg.body }}
-                  </div>
+                  <div class="msg-bubble msg-bubble-vet">{{ msg.body }}</div>
                   {% endif %}
-                  <div class="mt-1" style="font-size:11px;color:#94A3B8;">
-                    {{ msg.sent_at|date:"M d, H:i" }}
-                  </div>
+                  <div class="msg-time">{{ msg.sent_at|date:"M d, H:i" }}</div>
                 </div>
               </div>
               {% endif %}
             {% endfor %}
           </div>
 
-          <!-- Compose box -->
-          <div class="bg-white border-top p-3" style="flex-shrink:0;">
+          <!-- Compose -->
+          <div class="thread-compose">
             <form method="post" enctype="multipart/form-data" id="msgForm">
               {% csrf_token %}
               <input type="hidden" name="vet_id" value="{{ selected_vet.id }}">
               <div id="imgPreviewBox" class="mb-2" style="display:none;">
-                <span class="badge px-3 py-2" style="background:#EFF6FF;color:#1E3A8A;font-size:12px;">
+                <span class="badge px-3 py-2" style="background:#F0FDF4;color:#15803D;font-size:12px;">
                   <i class="fas fa-image me-1"></i>
                   <span id="imgName"></span>
                   <button type="button" onclick="clearImg()" class="btn-close ms-2" style="font-size:9px;"></button>
                 </span>
               </div>
               <div class="d-flex align-items-end gap-2">
-                <label for="imgInput" class="btn btn-sm mb-0"
-                       style="background:#EFF6FF;color:#1E3A8A;border:none;flex-shrink:0;" title="Attach image">
+                <label for="imgInput" class="compose-attach-btn" title="Attach image">
                   <i class="fas fa-paperclip"></i>
                 </label>
-                <input type="file" id="imgInput" name="image" accept="image/*"
-                       class="d-none" onchange="previewImg(this)">
+                <input type="file" id="imgInput" name="image" accept="image/*" class="d-none" onchange="previewImg(this)">
                 <textarea name="body" rows="1"
                           placeholder="Type your message…"
-                          class="form-control border-0 rounded-pill px-4"
-                          style="resize:none;background:#F1F5F9;font-size:13px;min-height:40px;max-height:110px;overflow:hidden;"
+                          class="compose-textarea"
                           oninput="autoResize(this)"
                           onkeydown="sendOnEnter(event)"></textarea>
-                <button type="submit" class="btn flex-shrink-0"
-                        style="background:#1E3A8A;color:white;border:none;border-radius:50%;width:40px;height:40px;">
-                  <i class="fas fa-paper-plane" style="font-size:13px;"></i>
+                <button type="submit" class="compose-send-btn">
+                  <i class="fas fa-paper-plane"></i>
                 </button>
               </div>
             </form>
           </div>
 
         {% else %}
-        <!-- No vet selected yet -->
-        <div class="d-flex align-items-center justify-content-center flex-grow-1 text-muted flex-column">
-          <i class="fas fa-hand-point-left fa-2x mb-3" style="color:#CBD5E1;"></i>
-          <p style="font-size:14px;">Select a veterinary doctor on the left to start a conversation.</p>
+        <!-- No vet selected — desktop placeholder -->
+        <div class="d-none d-md-flex flex-column align-items-center justify-content-center h-100 text-muted">
+          <i class="fas fa-hand-point-left fa-2x mb-3" style="color:#D1FAE5;"></i>
+          <p style="font-size:14px;">Select a veterinary doctor to start a conversation.</p>
         </div>
         {% endif %}
-      </div><!-- end right panel -->
 
+      </div>
     </div>
   </div>
+
 </div>
 
+<style>
+/* ── Mobile topbar ── */
+.fmd-mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  z-index: 1030;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.fmd-burger-btn {
+  background: #15803D;
+  border: none; color: white; border-radius: 8px;
+  width: 38px; height: 38px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.fmd-back-btn {
+  background: #F0FDF4;
+  border: none; color: #15803D; border-radius: 8px;
+  width: 36px; height: 36px; font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.fmd-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 1040;
+}
+.fmd-backdrop.active { display: block; }
+
+/* ── Main content ── */
+.fmd-main-content {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  min-height: 100vh;
+}
+
+/* ── Inbox shell ── */
+.inbox-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.inbox-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Contacts panel ── */
+.inbox-contacts {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid #E5E7EB;
+  background: white;
+  overflow-y: auto;
+}
+.contacts-header {
+  padding: 16px;
+  border-bottom: 1px solid #F3F4F6;
+}
+.contacts-section { padding: 8px 0; }
+.contacts-label {
+  color: #9CA3AF; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 6px 16px 4px; margin: 0;
+}
+.contact-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; text-decoration: none; cursor: pointer;
+  transition: background .15s; border-left: 3px solid transparent;
+}
+.contact-item:hover { background: #F0FDF4; }
+.contact-item.active { background: #DCFCE7; border-left-color: #15803D; }
+.contact-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.contact-info { min-width: 0; }
+.contact-name { color: #15803D; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-sub  { color: #9CA3AF; font-size: 11px; }
+
+/* ── Thread panel ── */
+.inbox-thread {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #F9FAFB;
+}
+.thread-header {
+  padding: 14px 20px;
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+.thread-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.thread-compose {
+  background: white;
+  border-top: 1px solid #E5E7EB;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+/* ── Messages ── */
+.msg-row { display: flex; }
+.msg-right { justify-content: flex-end; }
+.msg-left  { justify-content: flex-start; align-items: flex-end; gap: 8px; }
+.msg-avatar-sm {
+  width: 28px; height: 28px; border-radius: 50%; background: #D1FAE5;
+  color: #15803D; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.msg-bubble {
+  max-width: 72%; padding: 10px 14px;
+  font-size: 13px; line-height: 1.6; word-break: break-word;
+}
+.msg-bubble-me  { background: #15803D; color: white; border-radius: 18px 18px 4px 18px; }
+.msg-bubble-vet { background: white; border: 1px solid #E5E7EB; color: #1F2937; border-radius: 18px 18px 18px 4px; }
+.msg-img { max-width: 200px; border-radius: 10px; display: block; margin-bottom: 6px; }
+.msg-img-left { max-width: 200px; border-radius: 10px 10px 10px 2px; }
+.msg-time { font-size: 10px; color: #9CA3AF; margin-top: 4px; }
+.msg-right .msg-time { text-align: right; }
+
+/* ── Compose ── */
+.compose-attach-btn {
+  background: #F0FDF4; color: #15803D; border: none;
+  border-radius: 8px; width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+}
+.compose-textarea {
+  flex: 1; resize: none; border: 1px solid #E5E7EB; border-radius: 20px;
+  padding: 8px 16px; font-size: 13px; background: #F9FAFB;
+  min-height: 38px; max-height: 110px; overflow: hidden;
+  outline: none;
+}
+.compose-textarea:focus { border-color: #15803D; background: white; }
+.compose-send-btn {
+  background: #15803D; color: white; border: none;
+  border-radius: 50%; width: 38px; height: 38px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 13px;
+}
+
+/* ══════════════════════════
+   MOBILE OVERRIDES
+══════════════════════════ */
+@media (max-width: 767px) {
+  .fmd-mobile-topbar { display: flex; }
+
+  .fmd-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-top: 0;
+  }
+  .inbox-shell { height: 100vh; padding-top: 56px; }
+
+  /* Contacts: full width by default */
+  .inbox-contacts {
+    width: 100%;
+    border-right: none;
+    position: absolute;
+    top: 56px; left: 0; right: 0; bottom: 0;
+    z-index: 2;
+    transition: transform .25s ease;
+  }
+  /* Thread: full width, hidden by default, shown when vet selected */
+  .inbox-thread {
+    width: 100%;
+    position: absolute;
+    top: 56px; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    transform: translateX(100%);
+    transition: transform .25s ease;
+  }
+  .inbox-thread.thread-visible {
+    transform: translateX(0);
+    z-index: 3;
+  }
+  /* When thread is visible, push contacts out */
+  .inbox-thread.thread-visible ~ .inbox-contacts,
+  .thread-visible + .inbox-contacts {
+    transform: translateX(-100%);
+  }
+  /* Shell needs relative positioning for absolute children */
+  .inbox-body { position: relative; flex: 1; overflow: hidden; }
+
+  .msg-bubble { max-width: 85%; }
+}
+</style>
+
 <script>
-{% if selected_vet %}
+// Auto-scroll chat to bottom
 const cb = document.getElementById('chatBox');
 if (cb) cb.scrollTop = cb.scrollHeight;
-{% endif %}
+
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 110) + 'px';
@@ -207,5 +424,35 @@ function clearImg() {
   document.getElementById('imgInput').value = '';
   document.getElementById('imgPreviewBox').style.display = 'none';
 }
+
+// Mobile: show thread (slide in from right)
+function showThread() {
+  if (window.innerWidth <= 767) {
+    // Thread visibility handled by CSS class .thread-visible
+    // Navigation happens via <a href> so page reloads anyway
+  }
+}
+
+// Mobile: back button → show vet list
+function showVetList() {
+  window.location.href = '{% url "farmer_inbox" %}';
+}
+
+// Sidebar controls
+function openFarmerSidebar() {
+  const sidebar = document.getElementById('farmerSidebar');
+  const overlay = document.getElementById('farmerOverlay');
+  if (sidebar) sidebar.classList.add('open');
+  if (overlay) overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeFarmerSidebar() {
+  const sidebar = document.getElementById('farmerSidebar');
+  const overlay = document.getElementById('farmerOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
 </script>
+
 {% endblock %}

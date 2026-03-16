@@ -1,194 +1,249 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<!-- ── Mobile topbar (hidden on desktop via CSS in base.html) ── -->
+<div class="fmd-mobile-topbar">
+  <div class="d-flex align-items-center gap-2">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#15803D,#166534);
+                border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-cow" style="color:white;font-size:13px;"></i>
+    </div>
+    <span class="fw-bold" style="color:#15803D;font-size:14px;">FMD Detection</span>
+  </div>
+  <button class="fmd-burger-btn" onclick="openFarmerSidebar()" aria-label="Open menu">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+<!-- ── Sidebar backdrop ── -->
+<div id="farmerOverlay" class="fmd-backdrop" onclick="closeFarmerSidebar()"></div>
+
+<!-- ── Sidebar ── -->
+{% include 'partials/sidebar.html' %}
+
+<!-- ── Main content ── -->
+<div class="fmd-main-content" style="background:#f8f9fa;">
+
+  <!-- Page header -->
+  <div class="bg-white border-bottom px-3 px-md-4 py-3">
+    <h4 class="mb-1 fw-bold text-orange">Welcome Back!</h4>
+    <p class="text-muted mb-0" style="font-size:13px;">Early Detection System for Foot and Mouth Disease</p>
+    <small class="text-muted" style="font-size:12px;">Simba Farms, Ibanda District</small>
+  </div>
+
+  <div class="container-fluid p-3 p-md-4">
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-4">
+        <div class="card border-0 shadow-sm h-100" style="background:#15803D;border-radius:14px;">
+          <div class="card-body p-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;">Total Scans</div>
+              <div class="fw-bold" style="color:#FB923C;font-size:32px;line-height:1.1;">{{ total_scans }}</div>
+            </div>
+            <i class="fas fa-upload fa-2x" style="color:rgba(255,255,255,0.3);"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-4">
+        <div class="card border-0 shadow-sm h-100" style="background:#DC2626;border-radius:14px;">
+          <div class="card-body p-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;">FMD Detected</div>
+              <div class="fw-bold" style="color:#FB923C;font-size:32px;line-height:1.1;">{{ fmd_detected }}</div>
+            </div>
+            <i class="fas fa-heartbeat fa-2x" style="color:rgba(255,255,255,0.3);"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-4">
+        <div class="card border-0 shadow-sm h-100" style="background:#16A34A;border-radius:14px;">
+          <div class="card-body p-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;">Healthy Cattle</div>
+              <div class="fw-bold" style="color:#FB923C;font-size:32px;line-height:1.1;">{{ healthy_cattle }}</div>
+            </div>
+            <i class="fas fa-check-circle fa-2x" style="color:rgba(255,255,255,0.3);"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick actions — mobile only -->
+    <div class="row g-2 mb-4 d-md-none">
+      <div class="col-6">
+        <a href="{% url 'upload_image' %}" class="btn w-100 py-3 fw-semibold" style="background:#15803D;color:white;border:none;border-radius:12px;font-size:13px;">
+          <i class="fas fa-cloud-upload-alt d-block mb-1" style="font-size:20px;"></i>Upload Image
+        </a>
+      </div>
+      <div class="col-6">
+        <a href="{% url 'history' %}" class="btn w-100 py-3 fw-semibold" style="background:#166534;color:white;border:none;border-radius:12px;font-size:13px;">
+          <i class="fas fa-history d-block mb-1" style="font-size:20px;"></i>History
+        </a>
+      </div>
+      <div class="col-6">
+        <a href="{% url 'farmer_inbox' %}" class="btn w-100 py-3 fw-semibold" style="background:#047857;color:white;border:none;border-radius:12px;font-size:13px;">
+          <i class="fas fa-comments d-block mb-1" style="font-size:20px;"></i>Messages
+        </a>
+      </div>
+      <div class="col-6">
+        <a href="{% url 'marketplace' %}" class="btn w-100 py-3 fw-semibold" style="background:#D97706;color:white;border:none;border-radius:12px;font-size:13px;">
+          <i class="fas fa-store d-block mb-1" style="font-size:20px;"></i>Marketplace
+        </a>
+      </div>
+    </div>
+
+    <!-- Upload CTA — desktop -->
+    <div class="card border-0 shadow-sm mb-4 d-none d-md-block" style="background:#15803D;border-radius:14px;">
+      <div class="card-body p-5 text-center">
+        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color:#FB923C;"></i>
+        <h4 class="fw-bold text-white">Analyze Cattle Image</h4>
+        <p class="text-white mb-4" style="opacity:0.85;">Upload an image for FMD detection</p>
+        <a href="{% url 'upload_image' %}" class="btn btn-lg px-5 rounded-pill fw-bold"
+           style="background:white;color:#15803D;border:2px solid #FB923C;">
+          <i class="fas fa-upload me-2"></i>Upload Image
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent detections -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold" style="color:#FB923C;">Recent Detections</h5>
+        <a href="{% url 'history' %}" class="text-decoration-none fw-bold" style="color:#15803D;font-size:13px;">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_detections %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead style="background:#F0FDF4;">
+              <tr>
+                <th class="px-3 py-3" style="font-size:12px;">Date</th>
+                <th style="font-size:12px;">Result</th>
+                <th style="font-size:12px;">Confidence</th>
+                <th style="font-size:12px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for detection in recent_detections %}
+              <tr>
+                <td class="px-3 py-3" style="font-size:12px;color:#6B7280;">{{ detection.uploaded_at|date:"M d, H:i" }}</td>
+                <td>
+                  {% if detection.result == 'healthy' %}
+                    <span class="badge" style="background:#DCFCE7;color:#16A34A;font-size:11px;">Healthy</span>
+                  {% elif detection.result == 'fmd' %}
+                    <span class="badge" style="background:#FEE2E2;color:#DC2626;font-size:11px;">FMD Detected</span>
+                  {% else %}
+                    <span class="text-muted" style="font-size:12px;">—</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:13px;">
+                  {% if detection.confidence_score %}{{ detection.confidence_score|floatformat:1 }}%{% else %}—{% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'detection_detail' detection.id %}"
+                     class="btn btn-sm" style="background:#15803D;color:white;border:none;border-radius:6px;font-size:11px;padding:4px 10px;">
+                    <i class="fas fa-eye me-1"></i>View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+          <p class="text-muted fw-bold">No detections yet. Upload your first cattle image!</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <style>
-    /* Custom Styles for this Dashboard */
-    .dashboard-wrapper {
-        display: flex;
-        /* Forced background to match sidebar green for a seamless look */
-        background-color: #15803D; 
-        min-height: 100vh;
-    }
-    
-    .main-content {
-        margin-left: 250px;
-        width: calc(100% - 250px);
-        /* Main workspace remains light for readability */
-        background-color: #f8f9fa; 
-    }
+.text-orange { color: #FB923C !important; }
 
-    /* Permanent Green Utility */
-    .bg-permanent-green {
-        background-color: #15803D !important;
-    }
+/* ── Mobile topbar ── */
+.fmd-mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  z-index: 1030;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.fmd-burger-btn {
+  background: #15803D;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  width: 38px; height: 38px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fmd-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1040;
+}
+.fmd-backdrop.active { display: block; }
 
-    .text-orange {
-        color: #FB923C !important;
-    }
+/* ── Main content layout ── */
+.fmd-main-content {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  min-height: 100vh;
+}
 
-    .text-permanent-white {
-        color: #FFFFFF !important;
-    }
-
-    /* Stats Card Layout */
-    .stats-grid {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .stat-card {
-        flex: 1; 
-        background-color: #15803D; 
-        border-radius: 12px;
-        padding: 20px;
-        border: none;
-    }
-
-    /* Table Styling */
-    .custom-table thead {
-        background-color: #f1f5f9;
-    }
-    
-    .btn-upload {
-        background-color: #FFFFFF;
-        color: #15803D; 
-        font-weight: bold;
-        border: 2px solid #FB923C;
-    }
-    
-    .btn-upload:hover {
-        background-color: #FB923C;
-        color: #FFFFFF;
-        border-color: #FB923C;
-    }
-
-    /* Fix for any badge lingering in blue */
-    .text-success, .bg-success {
-        background-color: #15803D !important;
-    }
+@media (max-width: 767px) {
+  .fmd-mobile-topbar { display: flex; }
+  .fmd-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-top: 56px;
+  }
+}
 </style>
 
-<div class="dashboard-wrapper">
-    {% include 'partials/sidebar.html' %}
+<script>
+function openFarmerSidebar() {
+  const sidebar = document.getElementById('farmerSidebar');
+  const overlay = document.getElementById('farmerOverlay');
+  if (sidebar) sidebar.classList.add('open');
+  if (overlay) overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeFarmerSidebar() {
+  const sidebar = document.getElementById('farmerSidebar');
+  const overlay = document.getElementById('farmerOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+</script>
 
-    <div class="main-content">
-        
-        <div class="bg-white border-bottom p-4">
-            <h4 class="mb-1 fw-bold text-orange">Welcome Back!</h4>
-            <p class="text-muted mb-0">Early Detection System for Foot and Mouth Disease</p>
-            <small class="text-muted">Simba Farms, Ibanda District</small>
-        </div>
-
-        <div class="container-fluid p-4">
-            
-            <div class="stats-grid">
-                <div class="stat-card shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-orange fw-bold mb-1">Total Scans</h6>
-                            <h2 class="text-permanent-white fw-bold mb-0">{{ total_scans }}</h2>
-                        </div>
-                        <i class="fas fa-upload fa-2x text-permanent-white"></i>
-                    </div>
-                </div>
-
-                <div class="stat-card shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-orange fw-bold mb-1">FMD Detected</h6>
-                            <h2 class="text-permanent-white fw-bold mb-0">{{ fmd_detected }}</h2>
-                        </div>
-                        <i class="fas fa-heartbeat fa-2x text-permanent-white"></i>
-                    </div>
-                </div>
-
-                <div class="stat-card shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-orange fw-bold mb-1">Healthy Cattle</h6>
-                            <h2 class="text-permanent-white fw-bold mb-0">{{ healthy_cattle }}</h2>
-                        </div>
-                        <i class="fas fa-check-circle fa-2x text-permanent-white"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm bg-permanent-green mb-4">
-                <div class="card-body p-5 text-center">
-                    <i class="fas fa-cloud-upload-alt fa-3x text-orange mb-3"></i>
-                    <h4 class="fw-bold text-permanent-white">Analyze Cattle Image</h4>
-                    <p class="text-permanent-white mb-4">Upload image for FMD detection</p>
-                    <a href="{% url 'upload_image' %}" class="btn btn-upload btn-lg px-5 rounded-pill">
-                        <i class="fas fa-upload me-2"></i> Upload Image
-                    </a>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-orange">Recent Detections</h5>
-                        <a href="{% url 'history' %}" class="fw-bold text-decoration-none" style="color: #15803D;">View All</a>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    {% if recent_detections %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 custom-table">
-                                <thead>
-                                    <tr>
-                                        <th class="px-4 py-3">Date</th>
-                                        <th>Status</th>
-                                        <th>Result</th>
-                                        <th>Confidence</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for detection in recent_detections %}
-                                        <tr>
-                                            <td class="px-4 py-3">{{ detection.uploaded_at|date:"M d, Y H:i" }}</td>
-                                            <td>
-                                                <span class="badge bg-permanent-green">
-                                                    {{ detection.get_status_display }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {% if detection.result == 'healthy' %}
-                                                    <span class="badge bg-success">Healthy</span>
-                                                {% elif detection.result %}
-                                                    <span class="badge bg-danger">FMD Detected</span>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if detection.confidence_score %}
-                                                    {{ detection.confidence_score|floatformat:1 }}%
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{% url 'detection_detail' detection.id %}" class="btn btn-sm btn-outline-success" style="color: #15803D; border-color: #15803D;">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                            <p class="text-muted fw-bold">No detections yet. Upload your first cattle image!</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
