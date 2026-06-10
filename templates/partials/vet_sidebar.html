@@ -5,10 +5,6 @@
 <!-- ── Mobile top bar ── -->
 <div class="mobile-topbar d-flex align-items-center justify-content-between px-3 py-2">
   <div class="d-flex align-items-center gap-2">
-    <div style="width:32px;height:32px;background:linear-gradient(135deg,#FB923C,#F97316);
-                border-radius:8px;display:flex;align-items:center;justify-content:center;">
-      <i class="fas fa-stethoscope" style="color:white;font-size:13px;"></i>
-    </div>
     <span class="fw-bold" style="color:#064E3B;font-size:14px;">Vet Dashboard</span>
   </div>
   <button class="burger-btn vet-burger" onclick="openVetSidebar()" aria-label="Open menu">
@@ -28,23 +24,16 @@
     <i class="fas fa-times"></i>
   </button>
 
-  <!-- Logo -->
-  <div class="p-4 text-center border-bottom" style="border-color:rgba(255,255,255,0.15)!important;">
-    <div class="mb-2" style="width:52px;height:52px;background:linear-gradient(135deg,#FB923C,#F97316);
-                             border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
-      <i class="fas fa-stethoscope fa-lg" style="color:white;"></i>
-    </div>
-    <h6 class="mb-0 fw-bold" style="color:white;font-size:13px;">Vet Dashboard</h6>
-    <small style="color:white;font-size:11px;">FMD Detection System</small>
-  </div>
-
   <!-- Vet info -->
   <div class="px-4 py-3" style="border-bottom:1px solid rgba(255,255,255,0.1);">
     <div class="d-flex align-items-center">
-      <div style="width:36px;height:36px;background:rgba(251,146,60,0.25);border-radius:50%;
-                  display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="fas fa-user-md" style="color:#FB923C;font-size:14px;"></i>
-      </div>
+      {% if request.user.profile.profile_image %}
+        <img src="{{ request.user.profile.profile_image.url }}" alt="Profile photo" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(251,146,60,0.9);">
+      {% else %}
+        <div style="width:36px;height:36px;background:rgba(251,146,60,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas fa-user-md" style="color:#FB923C;font-size:14px;"></i>
+        </div>
+      {% endif %}
       <div class="ms-2">
         <div style="color:white;font-size:12px;font-weight:600;">Dr. {{ request.user.get_full_name|default:request.user.email }}</div>
         <div style="color:white;font-size:10px;">Veterinary Doctor</div>
@@ -62,6 +51,9 @@
     </a>
     <a href="{% url 'vet_uploads' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'vet_uploads' %}active{% endif %}" onclick="closeVetSidebar()">
       <i class="fas fa-images me-2"></i>All Farm Detections
+    </a>
+    <a href="{% url 'profile' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" onclick="closeVetSidebar()">
+      <i class="fas fa-user-circle me-2"></i>My Profile
     </a>
     <a href="{% url 'upload_image' %}" class="vet-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}" onclick="closeVetSidebar()">
       <i class="fas fa-cloud-upload-alt me-2"></i>Upload &amp; Detect
@@ -97,15 +89,15 @@
       <i class="fas fa-file-pdf me-2"></i>All-Time Report
     </a>
 
-    <p class="nav-section-label" style="padding-top:16px;">Marketplace</p>
+    <!-- <p class="nav-section-label" style="padding-top:16px;">Marketplace</p> -->
 
-    <a href="{% url 'marketplace' %}"
+    <!-- <a href="{% url 'marketplace' %}"
        class="vet-nav-link market-link {% if 'marketplace' in request.resolver_match.url_name %}active{% endif %}"
        onclick="closeVetSidebar()">
       <i class="fas fa-store me-2" style="color:white;"></i>
       <span style="color:white;font-weight:600;">Visit Market</span>
       <span class="ms-auto badge" style="background:#D97706;color:white;font-size:9px;padding:3px 6px;">NEW</span>
-    </a>
+    </a> -->
 
     <!-- Logout inside nav on mobile -->
     <div class="mt-4 d-md-none">

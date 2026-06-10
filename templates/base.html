@@ -147,5 +147,14 @@
     <script src="{% static 'js/main.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
+
+<script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+<df-messenger
+  intent="WELCOME"
+  chat-title="fmd"
+  agent-id="975a5d26-32a5-4c14-8286-1483d83a728d"
+  language-code="en"
+></df-messenger>
+
 </body>
 </html>

@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
+    path('profile/', views.profile_view, name='profile'),
 
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='auth/password_reset.html',
@@ -52,6 +53,9 @@ urlpatterns = [
     path('admin-panel/uploads/', views.admin_uploads_view, name='admin_uploads'),
     path('admin-panel/vets/', views.admin_vets_view, name='admin_vets'),
     path('admin-panel/vets/register/', views.admin_register_vet_view, name='admin_register_vet'),
+    path('admin-panel/vets/pending/', views.admin_pending_vets_view, name='admin_pending_vets'),
+    path('admin-panel/vets/<int:vet_id>/approve/', views.admin_approve_vet_view, name='admin_approve_vet'),
+    path('admin-panel/vets/<int:vet_id>/reject/', views.admin_reject_vet_view, name='admin_reject_vet'),
     path('admin-panel/notifications/', views.admin_notifications_view, name='admin_notifications'),
     path('admin-panel/reports/generate/<str:report_type>/', views.admin_generate_report_view, name='admin_generate_report'),
 

@@ -1,131 +1,109 @@
 {% extends 'base.html' %}
+{% block title %}Login - FMD Detection System{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper d-flex align-items-center justify-content-center">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card auth-card shadow-lg border-0 rounded-4">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <div class="mb-3">
-                                <i class="fas fa-cow fa-4x" style="color: #FB923C;"></i>
-                            </div>
-                            <h3 class="fw-bold mb-2" style="color: #FB923C !important;">FMD Early Detection System</h3>
-                            <p class="text-muted mb-1">Simba Farms, Ibanda District</p>
-                            <p class="text-muted small">AI-Powered Cattle Health Monitoring</p>
-                        </div>
+  <div class="w-100" style="max-width:460px;">
 
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-
-                        <form method="POST" novalidate>
-                            {% csrf_token %}
-
-                            <!-- Email -->
-                            <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label" style="color: #15803D; font-weight: 600;">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light" style="border-color: #15803D;">
-                                        <i class="fas fa-envelope" style="color: #FB923C;"></i>
-                                    </span>
-                                    {{ form.username }}
-                                </div>
-                                {% if form.username.errors %}
-                                    <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Password with show/hide toggle -->
-                            <div class="mb-4">
-                                <label for="{{ form.password.id_for_label }}" class="form-label" style="color: #15803D; font-weight: 600;">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light" style="border-color: #15803D;">
-                                        <i class="fas fa-lock" style="color: #FB923C;"></i>
-                                    </span>
-                                    {{ form.password }}
-                                    <button type="button"
-                                            id="togglePasswordBtn"
-                                            onclick="togglePassword()"
-                                            class="input-group-text bg-light"
-                                            style="border-color: #15803D; cursor: pointer; border-left: none;"
-                                            title="Show / hide password">
-                                        <i class="fas fa-eye" id="toggleIcon" style="color: #15803D; font-size: 14px;"></i>
-                                    </button>
-                                </div>
-                                {% if form.password.errors %}
-                                    <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="remember">
-                                    <label class="form-check-label" for="remember" style="font-size:13px;">Remember me</label>
-                                </div>
-                                <a href="{% url 'password_reset' %}" class="text-decoration-none" style="font-size:13px;color:#15803D;">Forgot Password?</a>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-semibold"
-                                    style="background: linear-gradient(90deg, #15803D 0%, #FB923C 100%); border: none;">
-                                Login to Dashboard
-                                <i class="fas fa-arrow-right ms-2"></i>
-                            </button>
-                        </form>
-
-                        <div class="text-center mt-4">
-                            <p class="mb-0" style="font-size:13px;">Don't have an account?
-                                <a href="{% url 'register' %}" class="fw-semibold text-decoration-none" style="color: #FB923C;">Register here</a>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="text-center mb-4">
+      <div class="mx-auto mb-3"
+           style="width:64px;height:64px;background:linear-gradient(135deg,#15803D,#166534);
+                  border-radius:16px;display:flex;align-items:center;justify-content:center;
+                  box-shadow:0 8px 24px rgba(21,128,61,0.4);">
+        <i class="fas fa-cow fa-2x" style="color:white;"></i>
+      </div>
+      <h3 class="fw-bold mb-1" style="color:white;">Welcome Back</h3>
+      <p style="color:rgba(255,255,255,0.75);font-size:14px;">FMD Early Detection System &mdash; Simba Farms</p>
     </div>
+
+    <div class="auth-card card border-0 shadow-lg" style="border-radius:20px;">
+      <div class="card-body p-4 p-md-5">
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Pending vet notice -->
+        {% if pending_vet %}
+        <div class="alert border-0 mb-4" style="background:#FEF3C7;border-left:4px solid #F59E0B !important;border-radius:12px;">
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:40px;height:40px;background:#FDE68A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fas fa-hourglass-half" style="color:#D97706;font-size:18px;"></i>
+            </div>
+            <div>
+              <div class="fw-bold mb-1" style="color:#92400E;font-size:14px;">Account Pending Approval</div>
+              <div style="color:#78350F;font-size:13px;line-height:1.5;">
+                Your veterinary doctor account (<strong>{{ pending_email }}</strong>) is currently under review.
+                You will receive an <strong>email and SMS</strong> once an administrator approves your account.
+              </div>
+              <div class="mt-2" style="font-size:12px;color:#92400E;">
+                <i class="fas fa-envelope me-1"></i> Check your inbox &amp; phone for updates.
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">Email Address</label>
+            <input type="email" name="username" class="form-control"
+                   placeholder="Enter your email address" required autocomplete="email"
+                   value="{{ request.POST.username|default:'' }}">
+          </div>
+
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold mb-0" style="font-size:13px;color:#374151;">Password</label>
+              <a href="{% url 'password_reset' %}" style="font-size:12px;color:#15803D;">Forgot password?</a>
+            </div>
+            <div class="position-relative">
+              <input type="password" name="password" id="loginPassword" class="form-control pe-5"
+                     placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" onclick="togglePwd()"
+                      class="position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent p-0">
+                <i class="fas fa-eye text-muted" id="eyeToggle" style="font-size:14px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn w-100 py-3 fw-bold"
+                  style="background:linear-gradient(135deg,#15803D,#166534);color:white;
+                         border:none;border-radius:12px;font-size:15px;
+                         box-shadow:0 4px 15px rgba(21,128,61,0.35);">
+            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+          </button>
+        </form>
+
+        <div class="text-center mt-4">
+          <span class="text-muted" style="font-size:13px;">Don't have an account?</span>
+          <a href="{% url 'register' %}" class="fw-semibold ms-1" style="color:#15803D;font-size:13px;">Create Account</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center mt-3" style="color:rgba(255,255,255,0.6);font-size:12px;">
+      &copy; Simba Farms FMD Detection System &mdash; Ibanda District
+    </p>
+  </div>
 </div>
 
 <style>
-.auth-wrapper {
-    min-height: 100vh;
-    background: linear-gradient(135deg, rgba(21, 128, 61, 0.9) 0%, rgba(22, 101, 52, 0.85) 100%),
-                url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600') center/cover;
-    background-attachment: fixed;
-}
-.auth-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
-
-/* Keep the eye button visually flush with the password field */
-#togglePasswordBtn:focus {
-    box-shadow: none;
-    outline: none;
-}
-#togglePasswordBtn:hover {
-    background-color: #F0FDF4 !important;
-}
+.form-control { border:1.5px solid #D1D5DB !important;border-radius:10px !important;padding:12px 14px !important;font-size:14px !important; }
+.form-control:focus { border-color:#15803D !important;box-shadow:0 0 0 3px rgba(21,128,61,0.15) !important;outline:none !important; }
 </style>
-
 <script>
-function togglePassword() {
-    const field = document.getElementById('{{ form.password.id_for_label }}');
-    const icon  = document.getElementById('toggleIcon');
-
-    if (!field) return;
-
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
-        icon.style.color = '#FB923C';
-    } else {
-        field.type = 'password';
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
-        icon.style.color = '#15803D';
-    }
+function togglePwd() {
+  const f = document.getElementById('loginPassword'), i = document.getElementById('eyeToggle');
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.classList.toggle('fa-eye'); i.classList.toggle('fa-eye-slash');
 }
 </script>
 {% endblock %}

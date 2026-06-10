@@ -6,7 +6,6 @@ from django.dispatch import receiver
 import uuid
 
 
-
 class UserProfile(models.Model):
     """Extended user profile for additional information"""
     USER_ROLES = [
@@ -15,12 +14,17 @@ class UserProfile(models.Model):
         ('admin', 'Administrator'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=10, choices=USER_ROLES, default='farmer')
-    phone_number = models.CharField(max_length=15, blank=True)
-    farm_name = models.CharField(max_length=100, default='Simba Farms')
-    location = models.CharField(max_length=100, default='Ibanda District')
-    is_verified = models.BooleanField(default=False)
+    user         = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role         = models.CharField(max_length=10, choices=USER_ROLES, default='farmer')
+    phone_number = models.CharField(max_length=20, blank=True)
+    farm_name    = models.CharField(max_length=100, default='Simba Farms')
+    location     = models.CharField(max_length=100, default='Ibanda District')
+    profile_image = models.ImageField(upload_to='profile_images/%Y/%m/%d/', blank=True, null=True)
+    is_verified  = models.BooleanField(default=False)
+
+    # Vet approval — False means pending admin review
+    # Farmers are auto-approved (True); self-registered vets start as False
+    is_approved  = models.BooleanField(default=True)
 
     # Vet-specific fields
     license_number = models.CharField(max_length=50, blank=True, null=True)
@@ -64,32 +68,29 @@ class Detection(models.Model):
     """Model to store cattle image detection results"""
 
     STATUS_CHOICES = [
-        ('pending', 'Pending Analysis'),
+        ('pending',   'Pending Analysis'),
         ('analyzing', 'Analyzing'),
         ('completed', 'Completed'),
     ]
-
     RESULT_CHOICES = [
         ('healthy', 'Foot and mouth disease not detected'),
-        ('fmd', 'Foot and mouth disease detected'),
+        ('fmd',     'Foot and mouth disease detected'),
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='detections')
-    image = models.ImageField(upload_to='cattle_images/%Y/%m/%d/')
-    # Annotated image with bounding boxes drawn on it (saved after analysis)
+    id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user            = models.ForeignKey(User, on_delete=models.CASCADE, related_name='detections')
+    image           = models.ImageField(upload_to='cattle_images/%Y/%m/%d/')
     annotated_image = models.ImageField(upload_to='annotated_images/%Y/%m/%d/', null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    result = models.CharField(max_length=20, choices=RESULT_CHOICES, null=True, blank=True)
-    result_label = models.CharField(max_length=100, blank=True, default='')
+    status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    result          = models.CharField(max_length=20, choices=RESULT_CHOICES, null=True, blank=True)
+    result_label    = models.CharField(max_length=100, blank=True, default='')
     confidence_score = models.FloatField(null=True, blank=True)
-    # JSON list of bounding box dicts: [{x, y, width, height, class, confidence}, ...]
-    bounding_boxes = models.JSONField(default=list, blank=True)
+    bounding_boxes  = models.JSONField(default=list, blank=True)
 
     # Metadata
-    animal_id = models.CharField(max_length=50, blank=True, null=True)
-    notes = models.TextField(blank=True)
-    location = models.CharField(max_length=100, blank=True)
+    animal_id  = models.CharField(max_length=50, blank=True, null=True)
+    notes      = models.TextField(blank=True)
+    location   = models.CharField(max_length=100, blank=True)
 
     # Timestamps
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -97,7 +98,7 @@ class Detection(models.Model):
 
     # Admin actions
     verified_by_admin = models.BooleanField(default=False)
-    admin_notes = models.TextField(blank=True)
+    admin_notes       = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-uploaded_at']
@@ -118,10 +119,10 @@ class Detection(models.Model):
 
 class SystemStatistics(models.Model):
     """Model to track system-wide statistics"""
-    date = models.DateField(default=timezone.now, unique=True)
-    total_scans = models.IntegerField(default=0)
-    fmd_detected = models.IntegerField(default=0)
-    healthy_cattle = models.IntegerField(default=0)
+    date             = models.DateField(default=timezone.now, unique=True)
+    total_scans      = models.IntegerField(default=0)
+    fmd_detected     = models.IntegerField(default=0)
+    healthy_cattle   = models.IntegerField(default=0)
     not_cow_detected = models.IntegerField(default=0)
 
     class Meta:
@@ -136,21 +137,20 @@ class SystemStatistics(models.Model):
 class Report(models.Model):
     """Model to track generated reports"""
     REPORT_TYPE_CHOICES = [
-        ('daily', 'Daily'),
-        ('weekly', 'Weekly'),
+        ('daily',   'Daily'),
+        ('weekly',  'Weekly'),
         ('monthly', 'Monthly'),
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
     report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date  = models.DateTimeField()
+    end_date    = models.DateTimeField()
     generated_at = models.DateTimeField(auto_now_add=True)
 
-    # Statistics snapshot
-    total_scans = models.IntegerField(default=0)
-    fmd_detected = models.IntegerField(default=0)
+    total_scans    = models.IntegerField(default=0)
+    fmd_detected   = models.IntegerField(default=0)
     healthy_cattle = models.IntegerField(default=0)
 
     class Meta:
@@ -165,18 +165,19 @@ class Report(models.Model):
 class Notification(models.Model):
     """Model to store admin notifications"""
     NOTIFICATION_TYPES = [
-        ('upload', 'New Upload'),
-        ('fmd_alert', 'FMD Alert'),
-        ('analysis_done', 'Analysis Complete'),
+        ('upload',           'New Upload'),
+        ('fmd_alert',        'FMD Alert'),
+        ('analysis_done',    'Analysis Complete'),
+        ('vet_registration', 'New Vet Registration'),
     ]
 
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    recipient         = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
-    title = models.CharField(max_length=200)
-    message = models.TextField()
-    detection = models.ForeignKey(Detection, on_delete=models.SET_NULL, null=True, blank=True)
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    title             = models.CharField(max_length=200)
+    message           = models.TextField()
+    detection         = models.ForeignKey(Detection, on_delete=models.SET_NULL, null=True, blank=True)
+    is_read           = models.BooleanField(default=False)
+    created_at        = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -185,15 +186,11 @@ class Notification(models.Model):
         return f"{self.notification_type} - {self.recipient.username}"
 
 
-# new models
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  RECOMMENDATION
 # ─────────────────────────────────────────────────────────────────────────────
 
 class Recommendation(models.Model):
-    """Auto-generated clinical recommendation attached to a Detection."""
-
     URGENCY_CHOICES = [
         ('critical', 'Critical — Immediate Action'),
         ('high',     'High — Act Within 24 Hours'),
@@ -203,8 +200,8 @@ class Recommendation(models.Model):
 
     detection  = models.OneToOneField('Detection', on_delete=models.CASCADE, related_name='recommendation')
     urgency    = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='low')
-    summary    = models.TextField()    # short line shown in history table
-    full_text  = models.TextField()    # full text shown on detail page
+    summary    = models.TextField()
+    full_text  = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -215,27 +212,18 @@ class Recommendation(models.Model):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  MESSAGING  —  Single flat inbox per vet
-#
-#  Design:
-#    • A farmer sends a DirectMessage directly to a vet (no thread/conversation).
-#    • The vet's inbox shows ALL messages from ALL farmers in one chronological list.
-#    • The vet can reply to any individual message; replies are linked via
-#      reply_to so they form a lightweight chain when rendered.
-#    • Farmers see only their own sent messages and replies from vets.
+#  MESSAGING
 # ─────────────────────────────────────────────────────────────────────────────
 
 class DirectMessage(models.Model):
-    """A message from a farmer to a vet (or a vet reply back to a farmer)."""
-
-    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_direct_messages')
-    recipient  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_direct_messages')
-    body       = models.TextField(blank=True)
-    image      = models.ImageField(upload_to='messages/%Y/%m/%d/', blank=True, null=True)
-    reply_to   = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
-    is_read    = models.BooleanField(default=False)
-    sent_at    = models.DateTimeField(auto_now_add=True)
+    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sender    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_direct_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_direct_messages')
+    body      = models.TextField(blank=True)
+    image     = models.ImageField(upload_to='messages/%Y/%m/%d/', blank=True, null=True)
+    reply_to  = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
+    is_read   = models.BooleanField(default=False)
+    sent_at   = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-sent_at']
@@ -249,7 +237,6 @@ class DirectMessage(models.Model):
 
     @property
     def other_party(self):
-        """Returns the farmer for a vet, and the vet for a farmer."""
         return self.recipient if self.is_from_farmer else self.sender
 
 
@@ -285,13 +272,19 @@ class Appointment(models.Model):
 
     @property
     def status_color(self):
-        return {'pending': '#F97316', 'approved': '#16A34A', 'rejected': '#DC2626',
-                'completed': '#1D4ED8', 'cancelled': '#6B7280'}.get(self.status, '#6B7280')
+        return {
+            'pending':   '#F97316', 'approved':  '#16A34A',
+            'rejected':  '#DC2626', 'completed': '#1D4ED8',
+            'cancelled': '#6B7280',
+        }.get(self.status, '#6B7280')
 
     @property
     def status_bg(self):
-        return {'pending': '#FEF3C7', 'approved': '#DCFCE7', 'rejected': '#FEE2E2',
-                'completed': '#DBEAFE', 'cancelled': '#F3F4F6'}.get(self.status, '#F3F4F6')
+        return {
+            'pending':   '#FEF3C7', 'approved':  '#DCFCE7',
+            'rejected':  '#FEE2E2', 'completed': '#DBEAFE',
+            'cancelled': '#F3F4F6',
+        }.get(self.status, '#F3F4F6')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -299,8 +292,6 @@ class Appointment(models.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class VaccinationRecord(models.Model):
-    """FMD vaccination record for the farm (one entry per vaccination event)."""
-
     id                = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     farmer            = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vaccination_records')
     vaccine_name      = models.CharField(max_length=200, default='FMD Vaccine')
@@ -331,15 +322,9 @@ class VaccinationRecord(models.Model):
         return False
 
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-# Add these two models to the bottom of detection/models.py
+#  MARKETPLACE
 # ─────────────────────────────────────────────────────────────────────────────
-
-import uuid
-from django.db import models
-from django.contrib.auth.models import User
-
 
 class MarketListing(models.Model):
     id          = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)

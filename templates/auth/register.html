@@ -3,9 +3,8 @@
 
 {% block content %}
 <div class="auth-wrapper d-flex align-items-center justify-content-center">
-  <div class="w-100" style="max-width:520px;">
+  <div class="w-100" style="max-width:560px;">
 
-    <!-- Logo -->
     <div class="text-center mb-4">
       <div class="mx-auto mb-3"
            style="width:64px;height:64px;background:linear-gradient(135deg,#15803D,#166534);
@@ -34,89 +33,100 @@
         <form method="post" id="registerForm" novalidate>
           {% csrf_token %}
 
-          <!-- ── ROLE SELECTOR ─────────────────────────────────── -->
+          <!-- Role selector -->
           <div class="mb-4">
             <label class="form-label fw-semibold mb-3" style="color:#15803D;font-size:14px;">
               I am registering as…
             </label>
             <div class="d-flex gap-3">
-
-              <!-- Farmer card -->
               <label class="role-card flex-fill" for="role_farmer" id="card_farmer">
                 <input type="radio" name="role" id="role_farmer" value="farmer" checked
                        onchange="switchRole()" class="d-none">
                 <div class="text-center p-3">
                   <div class="role-icon mb-2">🌾</div>
                   <div class="fw-bold" style="font-size:14px;color:#15803D;">Farmer</div>
-                  <div class="text-muted" style="font-size:11px;line-height:1.4;">
-                    Scan cattle &amp; detect FMD early
-                  </div>
+                  <div class="text-muted" style="font-size:11px;line-height:1.4;">Scan cattle &amp; detect FMD early</div>
                 </div>
               </label>
-
-              <!-- Vet card -->
               <label class="role-card flex-fill" for="role_vet" id="card_vet">
                 <input type="radio" name="role" id="role_vet" value="vet"
                        onchange="switchRole()" class="d-none">
                 <div class="text-center p-3">
                   <div class="role-icon mb-2">🩺</div>
                   <div class="fw-bold" style="font-size:14px;color:#15803D;">Veterinary Doctor</div>
-                  <div class="text-muted" style="font-size:11px;line-height:1.4;">
-                    Monitor farms &amp; advise farmers
-                  </div>
+                  <div class="text-muted" style="font-size:11px;line-height:1.4;">Monitor farms &amp; advise farmers</div>
                 </div>
               </label>
-
             </div>
-            {% if form.role.errors %}
-            <div class="text-danger mt-1" style="font-size:12px;">{{ form.role.errors.0 }}</div>
-            {% endif %}
           </div>
 
-          <!-- ── NAME ROW ──────────────────────────────────────── -->
+          <!-- Vet pending notice -->
+          <div id="vetPendingNotice" class="alert border-0 mb-4" style="display:none;background:#FEF3C7;border-left:4px solid #F59E0B !important;border-radius:10px;">
+            <div class="d-flex align-items-start gap-2">
+              <i class="fas fa-clock mt-1" style="color:#D97706;flex-shrink:0;"></i>
+              <div style="font-size:13px;color:#92400E;">
+                <strong>Account Requires Approval</strong><br>
+                Vet accounts are reviewed by the administrator before activation.
+                You will receive an <strong>email &amp; SMS</strong> once approved.
+              </div>
+            </div>
+          </div>
+
+          <!-- Name row -->
           <div class="row g-3 mb-3">
             <div class="col-6">
               <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">First Name</label>
-              <input type="text" name="first_name" class="form-control"
-                     placeholder="First name" required
+              <input type="text" name="first_name" class="form-control" placeholder="First name" required
                      value="{{ form.first_name.value|default:'' }}">
-              {% if form.first_name.errors %}
-              <div class="text-danger mt-1" style="font-size:12px;">{{ form.first_name.errors.0 }}</div>
-              {% endif %}
+              {% if form.first_name.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.first_name.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-6">
               <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">Last Name</label>
-              <input type="text" name="last_name" class="form-control"
-                     placeholder="Last name" required
+              <input type="text" name="last_name" class="form-control" placeholder="Last name" required
                      value="{{ form.last_name.value|default:'' }}">
-              {% if form.last_name.errors %}
-              <div class="text-danger mt-1" style="font-size:12px;">{{ form.last_name.errors.0 }}</div>
-              {% endif %}
+              {% if form.last_name.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.last_name.errors.0 }}</div>{% endif %}
             </div>
           </div>
 
-          <!-- ── EMAIL ─────────────────────────────────────────── -->
+          <!-- Email -->
           <div class="mb-3">
             <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">Email Address</label>
-            <input type="email" name="email" class="form-control"
-                   placeholder="your@email.com" required
+            <input type="email" name="email" class="form-control" placeholder="your@email.com" required
                    value="{{ form.email.value|default:'' }}">
-            {% if form.email.errors %}
-            <div class="text-danger mt-1" style="font-size:12px;">{{ form.email.errors.0 }}</div>
-            {% endif %}
+            {% if form.email.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.email.errors.0 }}</div>{% endif %}
           </div>
 
-          <!-- ── VET LICENSE (shown only for vet role) ─────────── -->
-          <div class="mb-3" id="licenseField" style="display:none;">
+          <!-- Phone (always shown, required for SMS) -->
+          <div class="mb-3">
             <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">
-              Veterinary License Number <span class="text-muted fw-normal">(optional)</span>
+              Phone Number <span class="text-muted fw-normal">(for SMS alerts)</span>
             </label>
-            <input type="text" name="license_number" class="form-control"
-                   placeholder="e.g. VET-UG-12345"
-                   value="{{ form.license_number.value|default:'' }}">
+            <input type="tel" name="phone_number" class="form-control"
+                   placeholder="e.g. +256 700 123 456"
+                   value="{{ form.phone_number.value|default:'' }}">
           </div>
 
-          <!-- ── PASSWORD ──────────────────────────────────────── -->
+          <!-- Vet-only fields -->
+          <div id="vetFields" style="display:none;">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">
+                Veterinary License Number <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              <input type="text" name="license_number" class="form-control"
+                     placeholder="e.g. VET-UG-12345"
+                     value="{{ form.license_number.value|default:'' }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">
+                Specialization <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              <input type="text" name="specialization" class="form-control"
+                     placeholder="e.g. Bovine Medicine, Large Animal Surgery"
+                     value="{{ form.specialization.value|default:'' }}">
+            </div>
+          </div>
+
+          <!-- Password -->
           <div class="mb-3">
             <label class="form-label fw-semibold" style="font-size:13px;color:#374151;">Password</label>
             <div class="position-relative">
@@ -127,9 +137,7 @@
                 <i class="fas fa-eye text-muted" id="eyeIcon1" style="font-size:14px;"></i>
               </button>
             </div>
-            {% if form.password.errors %}
-            <div class="text-danger mt-1" style="font-size:12px;">{{ form.password.errors.0 }}</div>
-            {% endif %}
+            {% if form.password.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.password.errors.0 }}</div>{% endif %}
           </div>
 
           <div class="mb-4">
@@ -142,12 +150,9 @@
                 <i class="fas fa-eye text-muted" id="eyeIcon2" style="font-size:14px;"></i>
               </button>
             </div>
-            {% if form.confirm_password.errors %}
-            <div class="text-danger mt-1" style="font-size:12px;">{{ form.confirm_password.errors.0 }}</div>
-            {% endif %}
+            {% if form.confirm_password.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.confirm_password.errors.0 }}</div>{% endif %}
           </div>
 
-          <!-- ── SUBMIT ─────────────────────────────────────────── -->
           <button type="submit" class="btn w-100 py-3 fw-bold"
                   style="background:linear-gradient(135deg,#15803D,#166534);color:white;
                          border:none;border-radius:12px;font-size:15px;
@@ -155,99 +160,52 @@
             <i class="fas fa-user-plus me-2"></i>
             <span id="submitLabel">Create Farmer Account</span>
           </button>
-
         </form>
 
         <div class="text-center mt-4">
           <span class="text-muted" style="font-size:13px;">Already have an account?</span>
-          <a href="{% url 'login' %}" class="fw-semibold ms-1"
-             style="color:#15803D;font-size:13px;">Sign In</a>
+          <a href="{% url 'login' %}" class="fw-semibold ms-1" style="color:#15803D;font-size:13px;">Sign In</a>
         </div>
-
       </div>
     </div>
 
     <p class="text-center mt-3" style="color:rgba(255,255,255,0.6);font-size:12px;">
       &copy; Simba Farms FMD Detection System &mdash; Ibanda District
     </p>
-
   </div>
 </div>
 
 <style>
-/* Role selection cards */
-.role-card {
-  cursor: pointer;
-  border: 2px solid #E5E7EB;
-  border-radius: 14px;
-  transition: all .2s;
-  background: white;
-}
-.role-card:hover {
-  border-color: #15803D;
-  background: #F0FDF4;
-}
-.role-card.selected {
-  border-color: #15803D;
-  background: #F0FDF4;
-  box-shadow: 0 0 0 3px rgba(21,128,61,0.15);
-}
-.role-card .role-icon {
-  font-size: 28px;
-}
-
-/* Override form-control border to green */
-.form-control {
-  border: 1.5px solid #D1D5DB !important;
-  border-radius: 10px !important;
-  padding: 12px 14px !important;
-  font-size: 14px !important;
-  transition: border-color .2s, box-shadow .2s !important;
-}
-.form-control:focus {
-  border-color: #15803D !important;
-  box-shadow: 0 0 0 3px rgba(21,128,61,0.15) !important;
-  outline: none !important;
-}
+.role-card { cursor:pointer;border:2px solid #E5E7EB;border-radius:14px;transition:all .2s;background:white; }
+.role-card:hover { border-color:#15803D;background:#F0FDF4; }
+.role-card.selected { border-color:#15803D;background:#F0FDF4;box-shadow:0 0 0 3px rgba(21,128,61,0.15); }
+.role-icon { font-size:28px; }
+.form-control { border:1.5px solid #D1D5DB !important;border-radius:10px !important;padding:12px 14px !important;font-size:14px !important; }
+.form-control:focus { border-color:#15803D !important;box-shadow:0 0 0 3px rgba(21,128,61,0.15) !important;outline:none !important; }
 </style>
 
 <script>
 function switchRole() {
   const isVet = document.getElementById('role_vet').checked;
-
-  // Highlight selected card
   document.getElementById('card_farmer').classList.toggle('selected', !isVet);
   document.getElementById('card_vet').classList.toggle('selected', isVet);
-
-  // Show/hide license field
-  document.getElementById('licenseField').style.display = isVet ? 'block' : 'none';
-
-  // Update submit button label
-  document.getElementById('submitLabel').textContent =
-    isVet ? 'Create Veterinary Doctor Account' : 'Create Farmer Account';
+  document.getElementById('vetFields').style.display = isVet ? 'block' : 'none';
+  document.getElementById('vetPendingNotice').style.display = isVet ? 'block' : 'none';
+  document.getElementById('submitLabel').textContent = isVet ? 'Submit Application for Review' : 'Create Farmer Account';
 }
-
 function togglePwd(fieldId, iconId) {
-  const field = document.getElementById(fieldId);
-  const icon  = document.getElementById(iconId);
-  if (field.type === 'password') {
-    field.type = 'text';
-    icon.classList.replace('fa-eye', 'fa-eye-slash');
-  } else {
-    field.type = 'password';
-    icon.classList.replace('fa-eye-slash', 'fa-eye');
-  }
+  const f = document.getElementById(fieldId), i = document.getElementById(iconId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.classList.toggle('fa-eye'); i.classList.toggle('fa-eye-slash');
 }
-
-// Set initial state on load
-document.addEventListener('DOMContentLoaded', function () {
-  // Pre-select the correct card if form was re-rendered with errors
+document.addEventListener('DOMContentLoaded', function() {
   const vetChecked = document.getElementById('role_vet').checked;
   document.getElementById('card_farmer').classList.toggle('selected', !vetChecked);
   document.getElementById('card_vet').classList.toggle('selected', vetChecked);
   if (vetChecked) {
-    document.getElementById('licenseField').style.display = 'block';
-    document.getElementById('submitLabel').textContent = 'Create Veterinary Doctor Account';
+    document.getElementById('vetFields').style.display = 'block';
+    document.getElementById('vetPendingNotice').style.display = 'block';
+    document.getElementById('submitLabel').textContent = 'Submit Application for Review';
   } else {
     document.getElementById('card_farmer').classList.add('selected');
   }

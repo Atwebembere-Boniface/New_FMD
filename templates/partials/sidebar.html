@@ -1,55 +1,38 @@
 <!-- ═══════════════════════════════════════════════════════
-     FARMER SIDEBAR  — desktop fixed | mobile slide-in drawer
+     FARMER SIDEBAR — desktop fixed | mobile slide-in drawer
      ═══════════════════════════════════════════════════════ -->
 
-<!-- ── Mobile top bar (only visible on small screens) ── -->
-<div class="mobile-topbar d-flex align-items-center justify-content-between px-3 py-2"
-     style="display:none!important;">
-  <div class="d-flex align-items-center gap-2">
-    <div style="width:32px;height:32px;background:linear-gradient(135deg,#FB923C,#F97316);
-                border-radius:8px;display:flex;align-items:center;justify-content:center;">
-      <i class="fas fa-cow" style="color:white;font-size:13px;"></i>
-    </div>
-    <span class="fw-bold" style="color:#15803D;font-size:14px;">FMD Detection</span>
-  </div>
-  <button class="burger-btn" onclick="openSidebar()" aria-label="Open menu">
-    <i class="fas fa-bars"></i>
-  </button>
-</div>
-
-<!-- ── Overlay backdrop ── -->
-<div id="sidebarOverlay" class="sidebar-backdrop" onclick="closeSidebar()"></div>
-
-<!-- ── Sidebar drawer ── -->
 <div id="farmerSidebar" class="fmd-sidebar text-white"
      style="background:linear-gradient(180deg,#15803D 0%,#166534 50%,#14532D 100%);">
 
   <!-- Close button — mobile only -->
-  <button class="sidebar-close-btn d-md-none" onclick="closeSidebar()" aria-label="Close menu">
+  <button class="sidebar-close-btn d-md-none" onclick="closeFarmerSidebar()" aria-label="Close menu">
     <i class="fas fa-times"></i>
   </button>
 
-  <!-- Logo -->
-  <div class="p-4 text-center border-bottom" style="border-color:rgba(255,255,255,0.15)!important;">
-    <div class="mb-2" style="width:52px;height:52px;background:white;border-radius:50%;
-                             display:flex;align-items:center;justify-content:center;margin:0 auto;">
-      <i class="fas fa-cow fa-lg" style="color:#15803D;"></i>
-    </div>
-    <h6 class="mb-0 fw-bold" style="color:white;font-size:13px;">FMD Detection</h6>
-    <small style="color:rgba(255,255,255,0.8);font-size:11px;">Simba Farms</small>
-  </div>
-
-  <!-- User info -->
-  <div class="px-4 py-3" style="border-bottom:1px solid rgba(255,255,255,0.1);">
+  <!-- Profile image section -->
+  <div class="px-4 py-4 border-bottom" style="border-color:rgba(255,255,255,0.15)!important;">
     <div class="d-flex align-items-center">
-      <div style="width:36px;height:36px;background:rgba(251,146,60,0.25);border-radius:50%;
-                  display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="fas fa-user" style="color:#FB923C;font-size:14px;"></i>
-      </div>
+
+      {% if request.user.profile.profile_image %}
+        <img src="{{ request.user.profile.profile_image.url }}"
+             alt="Profile Image"
+             style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #FB923C;">
+      {% else %}
+        <img src="/media/profile_images/default.png"
+             alt="Default Image"
+             style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #FB923C;">
+      {% endif %}
+
       <div class="ms-2">
-        <div style="color:white;font-size:12px;font-weight:600;">{{ request.user.get_full_name|default:request.user.email }}</div>
-        <div style="color:rgba(255,255,255,0.8);font-size:10px;">Farmer</div>
+        <div style="color:white;font-size:12px;font-weight:700;">
+          {{ request.user.get_full_name|default:request.user.email }}
+        </div>
+        <div style="color:white;font-size:10px;">
+          Farmer
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -58,170 +41,141 @@
 
     <p class="nav-section-label">Menu</p>
 
-    <a href="{% url 'dashboard' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" onclick="closeSidebar()">
+    <a href="{% url 'dashboard' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-th-large me-2"></i>Dashboard
     </a>
-    <a href="{% url 'upload_image' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}" onclick="closeSidebar()">
+
+    <a href="{% url 'upload_image' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'upload_image' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-cloud-upload-alt me-2"></i>Upload Image
     </a>
-    <a href="{% url 'history' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" onclick="closeSidebar()">
+
+    <a href="{% url 'history' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-history me-2"></i>History
     </a>
-    <a href="{% url 'reports' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" onclick="closeSidebar()">
+
+    <a href="{% url 'reports' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-file-alt me-2"></i>Reports
     </a>
-    <a href="{% url 'help' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}" onclick="closeSidebar()">
+
+    <a href="{% url 'profile' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
+      <i class="fas fa-user-circle me-2"></i>My Profile
+    </a>
+
+    <a href="{% url 'help' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-question-circle me-2"></i>Help
     </a>
 
     <p class="nav-section-label" style="padding-top:16px;">Communication</p>
 
-    <a href="{% url 'farmer_inbox' %}" class="farmer-nav-link {% if 'farmer_inbox' in request.resolver_match.url_name %}active{% endif %}" onclick="closeSidebar()">
+    <a href="{% url 'farmer_inbox' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'farmer_inbox' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-comments me-2"></i>Messages
     </a>
-    <a href="{% url 'farmer_appointments' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'farmer_appointments' %}active{% endif %}" onclick="closeSidebar()">
+
+    <a href="{% url 'farmer_appointments' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'farmer_appointments' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
       <i class="fas fa-calendar-check me-2"></i>Appointments
     </a>
-    <a href="{% url 'vaccination_list' %}" class="farmer-nav-link {% if request.resolver_match.url_name == 'vaccination_list' or request.resolver_match.url_name == 'vaccination_add' %}active{% endif %}" onclick="closeSidebar()">
-      <i class="fas fa-syringe me-2"></i>Vaccination History
+
+    <a href="{% url 'vaccination_list' %}"
+       class="farmer-nav-link {% if request.resolver_match.url_name == 'vaccination_list' %}active{% endif %}"
+       onclick="closeFarmerSidebar()">
+      <i class="fas fa-syringe me-2"></i>Vaccination
     </a>
 
-    <p class="nav-section-label" style="padding-top:16px;">Marketplace</p>
-
-    <a href="{% url 'marketplace' %}"
-       class="farmer-nav-link market-link {% if 'marketplace' in request.resolver_match.url_name %}active{% endif %}"
-       onclick="closeSidebar()">
-      <i class="fas fa-store me-2" style="color:white;"></i>
-      <span style="color:white;font-weight:600;">Visit Market</span>
-      <span class="ms-auto badge" style="background:#D97706;color:white;font-size:9px;padding:3px 6px;">NEW</span>
-    </a>
-
-    <!-- Logout inside nav on mobile -->
-    <div class="mt-4 d-md-none">
-      <a href="{% url 'logout' %}" class="btn w-100 py-2"
-         style="background:rgba(239,68,68,0.2);color:white;border:1px solid rgba(239,68,68,0.3);font-size:13px;border-radius:8px;">
-        <i class="fas fa-sign-out-alt me-2"></i>Logout
-      </a>
-    </div>
   </nav>
 
-  <!-- Logout — desktop fixed at bottom -->
-  <div class="d-none d-md-block p-3" style="border-top:1px solid rgba(255,255,255,0.1);">
-    <a href="{% url 'logout' %}" class="btn w-100 py-2"
-       style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.3);font-size:13px;border-radius:8px;">
+  <!-- Logout -->
+  <div class="p-3 border-top" style="border-color:rgba(255,255,255,0.15)!important;">
+    <a href="{% url 'logout' %}"
+       class="btn w-100 fw-semibold"
+       style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:10px;">
       <i class="fas fa-sign-out-alt me-2"></i>Logout
     </a>
   </div>
+
 </div>
 
 <style>
-/* ── Shared sidebar styles ───────────────────────── */
 .fmd-sidebar {
-  position: fixed;
-  left: 0; top: 0;
   width: 250px;
   height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
   z-index: 1050;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
-}
-
-.sidebar-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  z-index: 1040;
-}
-.sidebar-backdrop.active { display: block; }
-
-.nav-section-label {
-  color: rgba(255,255,255,0.6);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 8px 12px 4px;
-  margin: 0;
+  overflow-y: auto;
 }
 
 .farmer-nav-link {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  color: white !important;
+  color: white;
   text-decoration: none;
+  padding: 11px 14px;
+  margin-bottom: 6px;
   border-radius: 8px;
-  margin-bottom: 2px;
   font-size: 13px;
-  transition: all .2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
-.farmer-nav-link:hover { background: rgba(255,255,255,0.15); }
-.farmer-nav-link.active { background: white; color: #15803D !important; font-weight: 600; }
-.farmer-nav-link.active i { color: #15803D !important; }
-.market-link { background: rgba(217,119,6,0.2); border: 1px solid rgba(217,119,6,0.3); }
+
+.farmer-nav-link:hover {
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+.farmer-nav-link.active {
+  background: white !important;
+  color: #15803D !important;
+}
+
+.nav-section-label {
+  color: rgba(255,255,255,0.65);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 12px 4px;
+  margin-bottom: 4px;
+}
 
 .sidebar-close-btn {
   position: absolute;
-  top: 12px; right: 12px;
+  right: 12px;
+  top: 12px;
   background: rgba(255,255,255,0.15);
-  border: none;
   color: white;
-  border-radius: 50%;
-  width: 32px; height: 32px;
-  font-size: 14px;
-  cursor: pointer;
-  z-index: 10;
-}
-
-/* ── Mobile topbar ───────────────────────────────── */
-.mobile-topbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 56px;
-  background: white;
-  border-bottom: 1px solid #E5E7EB;
-  z-index: 1030;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.burger-btn {
-  background: #15803D;
   border: none;
-  color: white;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  width: 38px; height: 38px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* ── Desktop: sidebar always visible ─────────────── */
-@media (min-width: 768px) {
-  .fmd-sidebar { transform: translateX(0) !important; }
-  .mobile-topbar { display: none !important; }
-  .sidebar-close-btn { display: none !important; }
-}
-
-/* ── Mobile: sidebar hidden by default ──────────── */
 @media (max-width: 767px) {
-  .fmd-sidebar { transform: translateX(-100%); }
-  .fmd-sidebar.open { transform: translateX(0); }
-  .mobile-topbar { display: flex !important; }
+  .fmd-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .fmd-sidebar.open {
+    transform: translateX(0);
+  }
 }
 </style>
-
-<script>
-function openSidebar() {
-  document.getElementById('farmerSidebar').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('farmerSidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('active');
-  document.body.style.overflow = '';
-}
-</script>

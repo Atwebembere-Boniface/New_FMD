@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex">
+  {% if profile.role == 'admin' or request.user.is_superuser %}
+    {% include 'partials/admin_sidebar.html' %}
+  {% elif profile.role == 'vet' %}
+    {% include 'partials/vet_sidebar.html' %}
+  {% else %}
+    {% include 'partials/sidebar.html' %}
+  {% endif %}
+
+  <div class="main-content fmd-main-content" style="background:#F8FAFC;min-height:100vh;">
+    <div class="bg-white border-bottom px-3 px-md-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h4 class="mb-0 fw-bold" style="color:#15803D;">My Profile</h4>
+        <small class="text-muted">Update your account details and profile photo</small>
+      </div>
+      <a href="{% url dashboard_url %}" class="btn btn-sm fw-semibold" style="background:#15803D;color:white;border:none;border-radius:8px;">
+        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+      </a>
+    </div>
+
+    <div class="container-fluid p-3 p-md-4">
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-body text-center p-4">
+              {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Profile photo" style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid #FB923C;">
+              {% else %}
+                <div class="mx-auto" style="width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#15803D,#FB923C);display:flex;align-items:center;justify-content:center;border:4px solid #FDE68A;">
+                  <i class="fas fa-user fa-3x" style="color:white;"></i>
+                </div>
+              {% endif %}
+              <h5 class="fw-bold mt-3 mb-1">{{ request.user.get_full_name|default:request.user.email }}</h5>
+              <div class="badge" style="background:#DCFCE7;color:#166534;border-radius:999px;">{{ role_title }}</div>
+              <p class="text-muted mt-3 mb-0" style="font-size:13px;line-height:1.6;">
+                This photo appears in the top-left user section after login and in your profile page.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-body p-4">
+              <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Phone Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Farm/Workplace Name</label>
+                    {{ form.farm_name }}
+                    {% if form.farm_name.errors %}<div class="text-danger small mt-1">{{ form.farm_name.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Location</label>
+                    {{ form.location }}
+                    {% if form.location.errors %}<div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>{% endif %}
+                  </div>
+
+                  {% if form.license_number %}
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">License Number</label>
+                    {{ form.license_number }}
+                    {% if form.license_number.errors %}<div class="text-danger small mt-1">{{ form.license_number.errors.0 }}</div>{% endif %}
+                  </div>
+                  {% endif %}
+
+                  {% if form.specialization %}
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Specialization</label>
+                    {{ form.specialization }}
+                    {% if form.specialization.errors %}<div class="text-danger small mt-1">{{ form.specialization.errors.0 }}</div>{% endif %}
+                  </div>
+                  {% endif %}
+
+                  <div class="col-12">
+                    <label class="form-label fw-semibold" style="font-size:13px;">Upload Profile Photo</label>
+                    {{ form.profile_image }}
+                    {% if form.profile_image.errors %}<div class="text-danger small mt-1">{{ form.profile_image.errors.0 }}</div>{% endif %}
+                    <small class="text-muted">Accepted formats: JPG, PNG, WEBP. Maximum size: 5MB.</small>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                  <a href="{% url dashboard_url %}" class="btn btn-light fw-semibold" style="border-radius:8px;">Cancel</a>
+                  <button type="submit" class="btn fw-semibold" style="background:#15803D;color:white;border-radius:8px;">
+                    <i class="fas fa-save me-1"></i> Save Profile
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
